@@ -1,29 +1,21 @@
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateModule } from '@ngx-translate/core';
-import { BackupComponent } from '@/app/modules/settings/backup/backup.component';
-import { RemoveAllCachedAccessoriesModalComponent } from '@/app/modules/settings/remove-all-cached-accessories-modal/remove-all-cached-accessories-modal.component'; // eslint-disable-line max-len
-import { RemoveSingleCachedAccessoryModalComponent } from '@/app/modules/settings/remove-single-cached-accessory-modal/remove-single-cached-accessory-modal.component'; // eslint-disable-line max-len
-import { ResetHomebridgeModalComponent } from '@/app/modules/settings/reset-homebridge-modal/reset-homebridge-modal.component';
-import { RestoreComponent } from '@/app/modules/settings/restore/restore.component';
-import { SelectNetworkInterfacesComponent } from '@/app/modules/settings/select-network-interfaces/select-network-interfaces.component';
-import { SettingsRoutingModule } from '@/app/modules/settings/settings-routing.module';
-import { SettingsComponent } from '@/app/modules/settings/settings.component';
-import { UnpairAccessoryModalComponent } from '@/app/modules/settings/unpair-accessory-modal/unpair-accessory-modal.component';
+import { CommonModule } from '@angular/common'
+import { NgModule } from '@angular/core'
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap'
+import { TranslateModule } from '@ngx-translate/core'
+
+import { BackupComponent } from '@/app/modules/settings/backup/backup.component'
+import { RestoreComponent } from '@/app/modules/settings/backup/restore/restore.component'
+import { RemoveAllAccessoriesComponent } from '@/app/modules/settings/remove-all-accessories/remove-all-accessories.component'
+import { RemoveBridgeAccessoriesComponent } from '@/app/modules/settings/remove-bridge-accessories/remove-bridge-accessories.component'
+import { RemoveIndividualAccessoriesComponent } from '@/app/modules/settings/remove-individual-accessories/remove-individual-accessories.component'
+import { ResetAllBridgesComponent } from '@/app/modules/settings/reset-all-bridges/reset-all-bridges.component'
+import { ResetIndividualBridgesComponent } from '@/app/modules/settings/reset-individual-bridges/reset-individual-bridges.component'
+import { SelectNetworkInterfacesComponent } from '@/app/modules/settings/select-network-interfaces/select-network-interfaces.component'
+import { SettingsRoutingModule } from '@/app/modules/settings/settings-routing.module'
+import { SettingsComponent } from '@/app/modules/settings/settings.component'
 
 @NgModule({
-  declarations: [
-    SettingsComponent,
-    ResetHomebridgeModalComponent,
-    UnpairAccessoryModalComponent,
-    RemoveAllCachedAccessoriesModalComponent,
-    RemoveSingleCachedAccessoryModalComponent,
-    SelectNetworkInterfacesComponent,
-    RestoreComponent,
-    BackupComponent,
-  ],
   imports: [
     CommonModule,
     FormsModule,
@@ -31,6 +23,15 @@ import { UnpairAccessoryModalComponent } from '@/app/modules/settings/unpair-acc
     TranslateModule,
     NgbModule,
     SettingsRoutingModule,
+    SettingsComponent,
+    ResetAllBridgesComponent,
+    ResetIndividualBridgesComponent,
+    RemoveAllAccessoriesComponent,
+    RemoveIndividualAccessoriesComponent,
+    RemoveBridgeAccessoriesComponent,
+    SelectNetworkInterfacesComponent,
+    RestoreComponent,
+    BackupComponent,
   ],
 })
 export class SettingsModule {}

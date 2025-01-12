@@ -1,8 +1,7 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { ContainerRestartComponent } from '@/app/modules/platform-tools/docker/container-restart/container-restart.component';
-import { StartupScriptComponent } from '@/app/modules/platform-tools/docker/startup-script/startup-script.component';
-import { StartupScriptResolver } from '@/app/modules/platform-tools/docker/startup-script/startup-script.resolver';
+import { NgModule } from '@angular/core'
+import { RouterModule, Routes } from '@angular/router'
+
+import { StartupScriptResolver } from '@/app/modules/platform-tools/docker/startup-script/startup-script.resolver'
 
 const routes: Routes = [
   {
@@ -12,16 +11,16 @@ const routes: Routes = [
   },
   {
     path: 'startup-script',
-    component: StartupScriptComponent,
+    loadComponent: () => import('@/app/modules/platform-tools/docker/startup-script/startup-script.component').then(m => m.StartupScriptComponent),
     resolve: {
       startupScript: StartupScriptResolver,
     },
   },
   {
     path: 'restart-container',
-    component: ContainerRestartComponent,
+    loadComponent: () => import('@/app/modules/platform-tools/docker/container-restart/container-restart.component').then(m => m.ContainerRestartComponent),
   },
-];
+]
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],

@@ -1,8 +1,10 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateService } from '@ngx-translate/core';
-import { Observable, of } from 'rxjs';
+import { DatePipe, NgClass } from '@angular/common'
+import { HttpClient, HttpParams } from '@angular/common/http'
+import { Component, inject, Input, OnInit } from '@angular/core'
+import { FormsModule } from '@angular/forms'
+import { NgbActiveModal, NgbTypeahead } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe, TranslateService } from '@ngx-translate/core'
+import { firstValueFrom, Observable, of } from 'rxjs'
 import {
   catchError,
   debounceTime,
@@ -10,34 +12,46 @@ import {
   map,
   switchMap,
   tap,
-} from 'rxjs/operators';
-import { ApiService } from '@/app/core/api.service';
-import { environment } from '@/environments/environment';
+} from 'rxjs/operators'
+
+import { ApiService } from '@/app/core/api.service'
+import { environment } from '@/environments/environment'
 
 @Component({
-  selector: 'app-widget-control',
   templateUrl: './widget-control.component.html',
-  styleUrls: ['./widget-control.component.scss'],
+  standalone: true,
+  imports: [
+    FormsModule,
+    NgClass,
+    NgbTypeahead,
+    DatePipe,
+    TranslatePipe,
+  ],
 })
 export class WidgetControlComponent implements OnInit {
-  @Input() widget;
+  $activeModal = inject(NgbActiveModal)
+  private $api = inject(ApiService)
+  private $http = inject(HttpClient)
+  private $translate = inject(TranslateService)
 
-  // weather
-  public searching: boolean;
+  @Input() widget: any
 
-  // terminal
-  public fontSizes = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-  public fontWeights = ['100', '200', '300', '400', '500', '600', '700', '800', '900', 'bold', 'normal'];
+  // Weather
+  public searching: boolean
 
-  // clock
-  public currentDate = new Date();
+  // Terminal
+  public fontSizes = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  public fontWeights = ['100', '200', '300', '400', '500', '600', '700', '800', '900', 'bold', 'normal']
+
+  // Clock
+  public currentDate = new Date()
 
   public timeFormats = [
     'h:mm a',
     'h:mm:ss a',
     'H:mm',
     'H:mm:ss',
-  ];
+  ]
 
   public dateFormats = [
     'yyyy-MM-dd',
@@ -55,23 +69,11 @@ export class WidgetControlComponent implements OnInit {
     'EEE, MMM d',
     'EEEE',
     'EEEE, MMM d',
-  ];
+  ]
 
-  // cpu
-  public temperatureUnits = [
-    { label: 'status.widget.label_temperature_units_system_default', value: '' },
-    { label: 'status.widget.label_temperature_units_celsius', value: 'c' },
-    { label: 'status.widget.label_temperature_units_fahrenheit', value: 'f' },
-  ];
+  public networkInterfaces: string[] = []
 
-  public networkInterfaces: string[] = [];
-
-  constructor(
-    public activeModal: NgbActiveModal,
-    private $api: ApiService,
-    private $http: HttpClient,
-    private $translate: TranslateService,
-  ) {}
+  constructor() {}
 
   public searchCountryCodes = (text$: Observable<string>) =>
     text$.pipe(
@@ -79,33 +81,34 @@ export class WidgetControlComponent implements OnInit {
       distinctUntilChanged(),
       tap(() => this.searching = true),
       switchMap(term =>
-        term.length < 3 ? [] :
-          this.findOpenWeatherMapCity(term).pipe(
-            catchError(() => {
-              this.searching = false;
-              return of([]);
-            })),
+        term.length < 3
+          ? []
+          : this.findOpenWeatherMapCity(term).pipe(
+              catchError(() => {
+                this.searching = false
+                return of([])
+              }),
+            ),
       ),
       tap(() => this.searching = false),
-    );
+    )
 
-  public searchCountryCodeFormatter = (result: any) => result.name + ', ' + result.country;
+  public searchCountryCodeFormatter = (result: any) => `${result.name}, ${result.country}`
 
   ngOnInit() {
     if (this.widget.component === 'HomebridgeLogsWidgetComponent' || this.widget.component === 'TerminalWidgetComponent') {
       if (!this.widget.fontWeight) {
-        this.widget.fontWeight = '400';
+        this.widget.fontWeight = '400'
       }
       if (!this.widget.fontSize) {
-        this.widget.fontSize = 15;
+        this.widget.fontSize = 15
       }
     }
     if (this.widget.component === 'NetworkWidgetComponent') {
       // Get a list of active network interfaces from the settings
-      this.$api.get('/server/network-interfaces/bridge').toPromise()
-        .then((adapters) => {
-          this.networkInterfaces = adapters;
-        });
+      firstValueFrom(this.$api.get('/server/network-interfaces/bridge')).then((adapters) => {
+        this.networkInterfaces = adapters
+      })
     }
   }
 
@@ -122,13 +125,14 @@ export class WidgetControlComponent implements OnInit {
             lang: this.$translate.currentLang,
           },
         }),
-      }).pipe(
-        map((response: any) => response.list.map((item) => ({
+      })
+      .pipe(
+        map((response: any) => response.list.map((item: any) => ({
           id: item.id,
           name: item.name,
           country: item.sys.country,
           coord: item.coord,
         }))),
-      );
+      )
   }
 }

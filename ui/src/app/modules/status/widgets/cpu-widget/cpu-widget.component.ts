@@ -1,39 +1,49 @@
-import {
-  Component,
-  ElementRef,
-  Input,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { ChartConfiguration } from 'chart.js';
-import { BaseChartDirective } from 'ng2-charts';
-import { Subscription, interval } from 'rxjs';
-import { SettingsService } from '@/app/core/settings.service';
-import { IoNamespace, WsService } from '@/app/core/ws.service';
+import { DecimalPipe, NgClass, UpperCasePipe } from '@angular/common'
+import { Component, ElementRef, inject, Input, OnDestroy, OnInit, viewChild } from '@angular/core'
+import { TranslatePipe } from '@ngx-translate/core'
+import { ChartConfiguration } from 'chart.js'
+import { BaseChartDirective } from 'ng2-charts'
+import { interval, Subscription } from 'rxjs'
+
+import { ConvertTempPipe } from '@/app/core/pipes/convert-temp.pipe'
+import { SettingsService } from '@/app/core/settings.service'
+import { IoNamespace, WsService } from '@/app/core/ws.service'
 
 @Component({
-  selector: 'app-cpu-widget',
   templateUrl: './cpu-widget.component.html',
   styleUrls: ['./cpu-widget.component.scss'],
+  standalone: true,
+  imports: [
+    NgClass,
+    BaseChartDirective,
+    UpperCasePipe,
+    DecimalPipe,
+    TranslatePipe,
+    ConvertTempPipe,
+  ],
 })
 export class CpuWidgetComponent implements OnInit, OnDestroy {
-  @Input() public widget;
+  $settings = inject(SettingsService)
+  private $ws = inject(WsService)
 
-  @ViewChild(BaseChartDirective, { static: true }) private chart: BaseChartDirective;
-  @ViewChild('widgetbackground', { static: true }) private widgetBackground: ElementRef;
+  @Input() public widget: any
 
-  public cpu = {} as any;
-  public cpuTemperature = {} as any;
-  public currentLoad = 0;
+  readonly chart = viewChild(BaseChartDirective)
+  readonly widgetBackground = viewChild<ElementRef>('widgetbackground')
 
-  public lineChartType: ChartConfiguration['type'] = 'line';
+  public cpu = {} as any
+  public cpuTemperature = {} as any
+  public currentLoad = 0
+  public refreshInterval: number
+  public historyItems: number
+
+  public lineChartType: ChartConfiguration['type'] = 'line'
 
   public lineChartData: ChartConfiguration['data'] = {
     datasets: [{ data: [] }],
-  };
+  }
 
-  public lineChartLabels = [];
+  public lineChartLabels = []
 
   public lineChartOptions: ChartConfiguration['options'] = {
     responsive: true,
@@ -66,67 +76,95 @@ export class CpuWidgetComponent implements OnInit, OnDestroy {
         min: 0,
       },
     },
-  };
+  }
 
-  private io: IoNamespace;
-  private intervalSubscription: Subscription;
+  private io: IoNamespace
+  private intervalSubscription: Subscription
 
-  constructor(
-    private $ws: WsService,
-    public $settings: SettingsService,
-  ) {}
+  constructor() {}
 
   ngOnInit() {
-    this.io = this.$ws.getExistingNamespace('status');
-    // lookup the chart color based on the current theme
-    const userColor = getComputedStyle(this.widgetBackground.nativeElement).backgroundColor;
+    this.io = this.$ws.getExistingNamespace('status')
+    // Lookup the chart color based on the current theme
+    const userColor = getComputedStyle(this.widgetBackground().nativeElement).backgroundColor
     if (userColor) {
-      this.lineChartOptions.elements.line.backgroundColor = userColor;
-      this.lineChartOptions.elements.line.borderColor = userColor;
+      this.lineChartOptions.elements.line.backgroundColor = userColor
+      this.lineChartOptions.elements.line.borderColor = userColor
     }
 
     this.io.connected.subscribe(async () => {
-      this.getServerCpuInfo();
-    });
+      this.getServerCpuInfo()
+    })
 
     if (this.io.socket.connected) {
-      this.getServerCpuInfo();
+      this.getServerCpuInfo()
     }
 
-    this.intervalSubscription = interval(9000).subscribe(() => {
+    // Interval and history items should be in [1, 60]
+    if (!this.widget.refreshInterval) {
+      this.widget.refreshInterval = 10
+    }
+    if (!this.widget.historyItems) {
+      this.widget.historyItems = 60
+    }
+    this.refreshInterval = Math.min(60, Math.max(1, Number.parseInt(this.widget.refreshInterval, 10)))
+    this.historyItems = Math.min(60, Math.max(1, Number.parseInt(this.widget.historyItems, 10)))
+
+    this.intervalSubscription = interval(this.refreshInterval * 1000).subscribe(() => {
       if (this.io.socket.connected) {
-        this.getServerCpuInfo();
+        this.getServerCpuInfo()
       }
-    });
+    })
   }
 
   getServerCpuInfo() {
     this.io.request('get-server-cpu-info').subscribe((data) => {
-      this.cpuTemperature = data.cpuTemperature;
-      this.currentLoad = data.currentLoad;
+      this.updateData(data)
+      this.chart().update()
+    })
+  }
 
-      const dataLength = Object.keys(this.lineChartData.datasets[0].data).length;
-      if (!dataLength) {
-        this.lineChartData.datasets[0].data = {
-          ...data.cpuLoadHistory,
-        };
-        this.lineChartLabels = data.cpuLoadHistory.map(() => 'point');
-      } else {
-        this.lineChartData.datasets[0].data[dataLength] = data.currentLoad;
-        this.lineChartLabels.push('point');
+  updateData(data: any) {
+    this.cpuTemperature = data.cpuTemperature
+    this.currentLoad = data.currentLoad
 
-        if (dataLength > 60) {
-          delete this.lineChartData.datasets[0].data[0];
-          this.lineChartData.datasets[0].data = { ...this.lineChartData.datasets[0].data };
-          this.lineChartLabels.shift();
-        }
+    const dataLength = Object.keys(this.lineChartData.datasets[0].data).length
+    if (!dataLength) {
+      this.initializeChartData(data)
+    } else {
+      this.updateChartData(data, dataLength)
+    }
+  }
+
+  initializeChartData(data: any) {
+    const items = data.cpuLoadHistory.slice(-this.historyItems)
+    this.lineChartData.datasets[0].data = { ...items }
+    this.lineChartLabels = items.map(() => 'point')
+  }
+
+  updateChartData(data: any, dataLength: number) {
+    this.lineChartData.datasets[0].data[dataLength] = data.currentLoad
+    this.lineChartLabels.push('point')
+
+    if (dataLength >= this.historyItems) {
+      this.shiftChartData()
+    }
+  }
+
+  shiftChartData() {
+    const newItems = {}
+    Object.keys(this.lineChartData.datasets[0].data).forEach((key, index, array) => {
+      if (index + 1 < array.length) {
+        newItems[key] = this.lineChartData.datasets[0].data[array[index + 1]]
       }
+    })
 
-      this.chart.update();
-    });
+    // @ts-expect-error - TS2740: Type {} is missing the following properties from type...
+    this.lineChartData.datasets[0].data = newItems
+    this.lineChartLabels = this.lineChartLabels.slice(1)
   }
 
   ngOnDestroy() {
-    this.intervalSubscription.unsubscribe();
+    this.intervalSubscription.unsubscribe()
   }
 }

@@ -1,57 +1,61 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
-import {
-  Component,
-  Input,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
-import * as dayjs from 'dayjs';
-import { Subject, Subscription, interval } from 'rxjs';
-import { AuthService } from '@/app/core/auth/auth.service';
-import { IoNamespace, WsService } from '@/app/core/ws.service';
-import { environment } from '@/environments/environment';
+import { DecimalPipe, NgClass, TitleCasePipe, UpperCasePipe } from '@angular/common'
+import { HttpClient, HttpParams } from '@angular/common/http'
+import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core'
+import { TranslatePipe, TranslateService } from '@ngx-translate/core'
+import dayjs from 'dayjs'
+import { interval, Subject, Subscription } from 'rxjs'
+
+import { ConvertTempPipe } from '@/app/core/pipes/convert-temp.pipe'
+import { SettingsService } from '@/app/core/settings.service'
+import { IoNamespace, WsService } from '@/app/core/ws.service'
+import { environment } from '@/environments/environment'
 
 @Component({
-  selector: 'app-weather-widget',
   templateUrl: './weather-widget.component.html',
-  styleUrls: ['./weather-widget.component.scss'],
+  standalone: true,
+  imports: [
+    NgClass,
+    DecimalPipe,
+    TitleCasePipe,
+    TranslatePipe,
+    ConvertTempPipe,
+    UpperCasePipe,
+  ],
 })
 export class WeatherWidgetComponent implements OnInit, OnDestroy {
-  @Input() widget;
-  @Input() configureEvent: Subject<any>;
+  private $http = inject(HttpClient)
+  private $translate = inject(TranslateService)
+  private $ws = inject(WsService)
 
-  public currentWeather;
+  @Input() widget: any
+  @Input() configureEvent: Subject<any>
 
-  private io: IoNamespace;
-  private intervalSubscription: Subscription;
+  public currentWeather: any
+  public $settings = inject(SettingsService)
+  private io: IoNamespace
+  private intervalSubscription: Subscription
 
-  constructor(
-    private $ws: WsService,
-    public $auth: AuthService,
-    private $http: HttpClient,
-    private $translate: TranslateService,
-  ) {}
+  constructor() {}
 
   ngOnInit() {
-    this.io = this.$ws.getExistingNamespace('status');
+    this.io = this.$ws.getExistingNamespace('status')
     this.io.connected.subscribe(async () => {
-      this.getCurrentWeather();
-    });
+      this.getCurrentWeather()
+    })
 
     if (this.io.socket.connected) {
-      this.getCurrentWeather();
+      this.getCurrentWeather()
     }
 
     this.configureEvent.subscribe({
       next: () => {
-        this.getCurrentWeather();
+        this.getCurrentWeather()
       },
-    });
+    })
 
     this.intervalSubscription = interval(1300000).subscribe(() => {
-      this.getCurrentWeather();
-    });
+      this.getCurrentWeather()
+    })
   }
 
   /**
@@ -60,15 +64,15 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
    */
   getCurrentWeather() {
     if (!this.widget.location || !this.widget.location.id) {
-      return;
+      return
     }
 
     try {
-      const weatherCache = JSON.parse(localStorage.getItem(`weather-${this.widget.location.id}`));
+      const weatherCache = JSON.parse(localStorage.getItem(`weather-${this.widget.location.id}`))
       if (weatherCache) {
         if (dayjs().diff(dayjs(weatherCache.timestamp), 'minute') < 20) {
-          this.currentWeather = weatherCache;
-          return;
+          this.currentWeather = weatherCache
+          return
         }
       }
     } catch (e) {}
@@ -83,10 +87,10 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         },
       }),
     }).subscribe((data: any) => {
-      data.timestamp = new Date().toISOString();
-      this.currentWeather = data;
-      localStorage.setItem(`weather-${this.widget.location.id}`, JSON.stringify(data));
-    });
+      data.timestamp = new Date().toISOString()
+      this.currentWeather = data
+      localStorage.setItem(`weather-${this.widget.location.id}`, JSON.stringify(data))
+    })
   }
 
   /**
@@ -95,45 +99,45 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   getWeatherIconClass(): string {
     switch (this.currentWeather.weather[0].icon) {
       case '01d': // clear day
-        return 'far fa-fw fa-sun';
+        return 'far fa-fw fa-sun'
       case '01n': // clear night
-        return 'far fa-fw fa-moon';
+        return 'far fa-fw fa-moon'
       case '02d': // few clouds day
-        return 'fas fa-fw fa-cloud-sun';
+        return 'fas fa-fw fa-cloud-sun'
       case '02n': // few clouds night
-        return 'fas fa-fw fa-cloud-moon';
+        return 'fas fa-fw fa-cloud-moon'
       case '03d': // scattered clouds day
-        return 'fas fa-fw fa-cloud-sun';
+        return 'fas fa-fw fa-cloud-sun'
       case '03n': // scattered clouds night
-        return 'fas fa-fw fa-cloud-moon';
+        return 'fas fa-fw fa-cloud-moon'
       case '04d': // broken clouds day
-        return 'fas fa-fw fa-cloud-sun';
+        return 'fas fa-fw fa-cloud-sun'
       case '04n': // broken clouds night
-        return 'fas fa-fw fa-cloud-moon';
+        return 'fas fa-fw fa-cloud-moon'
       case '09d': // shower rain day
-        return 'fas fa-fw fa-cloud-sun-rain';
+        return 'fas fa-fw fa-cloud-sun-rain'
       case '09n': // shower rain night
-        return 'fas fa-fw fa-cloud-moon-rain';
+        return 'fas fa-fw fa-cloud-moon-rain'
       case '10d': // rain day
-        return 'fas fa-fw fa-cloud-rain';
+        return 'fas fa-fw fa-cloud-rain'
       case '10n': // rain night
-        return 'fas fa-fw fa-cloud-moon-rain';
+        return 'fas fa-fw fa-cloud-moon-rain'
       case '11d': // thunderstorm day
-        return 'fas fa-fw fa-cloud-showers-heavy';
+        return 'fas fa-fw fa-cloud-showers-heavy'
       case '11n': // thunderstorm night
-        return 'fas fa-fw fa-cloud-showers-heavy';
+        return 'fas fa-fw fa-cloud-showers-heavy'
       case '13d': // snow day
-        return 'fas fa-fw fa-snowflake';
+        return 'fas fa-fw fa-snowflake'
       case '13n': // snow night
-        return 'fas fa-fw fa-snowflake';
+        return 'fas fa-fw fa-snowflake'
       case '50d': // mist day
-        return 'fas fa-fw fa-smog';
+        return 'fas fa-fw fa-smog'
       case '50n': // mist night
-        return 'fas fa-fw fa-smog';
+        return 'fas fa-fw fa-smog'
     }
   }
 
   ngOnDestroy() {
-    this.intervalSubscription.unsubscribe();
+    this.intervalSubscription.unsubscribe()
   }
 }

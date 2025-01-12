@@ -2,6 +2,40 @@
   z-index: 1050 !important;
 }
 
-.modal-content li {
-  line-height: 2rem;
+.modal-header {
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+}
+
+.modal-footer {
+  border-bottom-left-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+}
+
+.modal-content {
+  border-radius: 0.7rem !important;
+  border: none;
+  line-height: 1.5rem;
+  font-size: 0.9rem;
+
+  legend {
+    line-height: 2rem;
+  }
+
+  ul:not(.list-group) {
+    padding-inline-start: 20px;
+    padding-right: 20px;
+
+    li {
+      margin: 0;
+      padding: 0;
+    }
+    li:not(:last-child) {
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  .small {
+    line-height: 1.25rem;
+  }
 }

@@ -1,33 +1,29 @@
-import { Injectable } from '@angular/core';
-import {
-  ActivatedRouteSnapshot,
-  CanActivate,
-  Router,
-  RouterStateSnapshot,
-} from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
-import { Observable } from 'rxjs';
-import { AuthService } from '@/app/core/auth/auth.service';
+import { inject, Injectable } from '@angular/core'
+import { CanActivate, Router } from '@angular/router'
+import { TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { Observable } from 'rxjs'
+
+import { AuthService } from '@/app/core/auth/auth.service'
 
 @Injectable({
   providedIn: 'root',
 })
 export class AdminGuard implements CanActivate {
-  constructor(
-    private $auth: AuthService,
-    private $toast: ToastrService,
-    private $router: Router,
-  ) {}
+  private $auth = inject(AuthService)
+  private $router = inject(Router)
+  private $translate = inject(TranslateService)
+  private $toastr = inject(ToastrService)
 
-  canActivate(
-    next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+  constructor() {}
+
+  canActivate(): Observable<boolean> | Promise<boolean> | boolean {
     if (this.$auth.user && this.$auth.user.admin) {
-      return true;
+      return true
     } else {
-      this.$toast.error('Only Administrators may access the requested page.');
-      this.$router.navigate(['/']);
-      return false;
+      this.$toastr.error(this.$translate.instant('toast.no_auth'), this.$translate.instant('toast.title_error'))
+      this.$router.navigate(['/'])
+      return false
     }
   }
 }

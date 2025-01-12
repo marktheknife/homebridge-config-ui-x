@@ -1,68 +1,76 @@
-<div class="modal-content hb-plugin-settings-modal">
+<div class="modal-content">
   <div class="modal-header">
     <h5 class="modal-title">Homebridge Google Smart Home</h5>
-    <button type="button" class="close" data-dismiss="modal" [attr.aria-label]="'form.button_close' | translate"
-      (click)="activeModal.dismiss('Dismiss')">
+    <button
+      type="button"
+      class="close"
+      data-dismiss="modal"
+      [attr.aria-label]="'form.button_close' | translate"
+      (click)="$activeModal.dismiss('Dismiss')"
+    >
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
 
-  <div class="modal-body" *ngIf="!$settings.env.enableAccessories">
-    <div *ngIf="!$settings.env.enableAccessories">
-      <div class="alert alert-warning" role="alert">
-        <p [innerHTML]="'accessories.message_must_use_insecure_mode' | translate">To control your accessories you must
-          be running Homebridge in <strong>insecure</strong> mode.</p>
-        <p class="mb-0">
-          <span [translate]="'accessories.message_please_see'">Please see</span>
-          <a target="_blank" rel="noopener noreferrer"
-            href="https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control">
-            https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control
-          </a>
-          <span [translate]="'accessories.message_for_more_information'">for more information.</span>
-        </p>
-      </div>
+  <div class="modal-body">
+    @if (!$settings.env.enableAccessories) {
+    <div class="alert alert-warning" role="alert">
+      <p
+        class="mb-0"
+        [innerHTML]="'accessories.message_must_use_insecure_mode' | translate: { link: linkInsecure }"
+      ></p>
     </div>
-  </div>
-
-  <div class="modal-body" *ngIf="$settings.env.enableAccessories">
-    <p [innerHTML]="'plugins.settings.custom.homebridge-gsh.message_about' | translate"></p>
-    <p *ngIf="!gshConfig.token" translate="plugins.settings.custom.homebridge-gsh.message_account_link_required"></p>
-    <div class="text-center" *ngIf="!gshConfig.token">
-      <button class="btn btn-primary btn-lg" (click)="linkAccount()"
-        translate="plugins.settings.custom.homebridge-gsh.label_link_account"></button>
+    } @if ($settings.env.enableAccessories) {
+    <p>{{ 'plugins.settings.custom.homebridge-gsh.message_about' | translate }}</p>
+    @if (!gshConfig.token) {
+    <p>{{ 'plugins.settings.custom.homebridge-gsh.message_account_link_required' | translate }}</p>
+    } @if (!gshConfig.token) {
+    <div class="text-center">
+      <button class="btn btn-primary btn-lg" (click)="linkAccount()">
+        {{ 'plugins.settings.custom.homebridge-gsh.label_link_account' | translate }}
+      </button>
     </div>
-
-    <div class="text-center mt-1" *ngIf="gshConfig.token">
-      <i class="fas fa-fw fa-check-circle primary-text" style="font-size:50px;"></i>
+    } @if (gshConfig.token) {
+    <div class="text-center mt-1">
+      <i class="fas fa-fw fa-check-circle primary-text" style="font-size: 50px"></i>
       <h4 class="mt-2">
-        {{ linkType | titlecase }}
-        {{ 'plugins.settings.custom.homebridge-gsh.label_account_linked' | translate }}
+        {{ linkType | titlecase }} {{ 'plugins.settings.custom.homebridge-gsh.label_account_linked' | translate }}
       </h4>
-
-      <div class="mt-3" *ngIf="justLinked">
+      @if (justLinked) {
+      <div class="mt-3">
         <p class="primary-text">
-          <strong translate="plugins.settings.custom.homebridge-gsh.message_homebridge_restart_required"></strong>
+          <strong
+            >{{ 'plugins.settings.custom.homebridge-gsh.message_homebridge_restart_required' | translate }}</strong
+          >
         </p>
       </div>
+      }
     </div>
-
-    <div class="mt-3" *ngIf="gshConfig && gshConfig.token">
-      <markdown class="plugin-md" [data]="schema.footerDisplay" *ngIf="schema.footerDisplay">
-      </markdown>
+    } @if (gshConfig && gshConfig.token) {
+    <div class="mt-3">
+      @if (schema.footerDisplay) {
+      <markdown class="plugin-md" [data]="schema.footerDisplay"></markdown>
+      }
     </div>
-
-    <div *ngIf="gshConfig && gshConfig.token" class="card p-2 pt-3 mt-4">
+    <div class="card p-2 pt-3 mt-4">
       <app-schema-form [configSchema]="schema" [(data)]="gshConfig"></app-schema-form>
     </div>
+    } }
   </div>
 
   <div class="modal-footer">
-    <button type="button" class="btn btn-elegant mr-auto" data-dismiss="modal" (click)="unlinkAccount()"
-      *ngIf="gshConfig.token" translate="plugins.settings.custom.homebridge-gsh.label_unlink_account">
+    @if (gshConfig.token) {
+    <button type="button" class="btn btn-elegant mr-auto" data-dismiss="modal" (click)="unlinkAccount()">
+      {{ 'plugins.settings.custom.homebridge-gsh.label_unlink_account' | translate }}
     </button>
-    <button type="button" class="btn btn-elegant" data-dismiss="modal" (click)="close()"
-      [translate]="'form.button_close'">Close</button>
-    <button type="button" class="btn btn-primary" data-dismiss="modal" (click)="saveAndClose()" *ngIf="gshConfig.token"
-      [translate]="'form.button_save'">Save</button>
+    }
+    <button type="button" class="btn btn-elegant" data-dismiss="modal" (click)="close()">
+      {{ 'form.button_close' | translate }}
+    </button>
+    @if (gshConfig.token) {
+    <button type="button" class="btn btn-primary" data-dismiss="modal" (click)="saveAndClose()">
+      {{ 'form.button_save' | translate }}
+    </button>
+    }
   </div>
 </div>

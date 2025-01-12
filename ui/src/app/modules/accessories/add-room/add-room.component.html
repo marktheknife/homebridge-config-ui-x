@@ -1,0 +1,57 @@
+<div class="modal-content">
+  <form>
+    <div class="modal-header">
+      <h5 class="modal-title">{{ 'accessories.button_add_room' | translate }}</h5>
+      <button
+        type="button"
+        class="close"
+        data-dismiss="modal"
+        [attr.aria-label]="'form.button_close' | translate"
+        (click)="$activeModal.dismiss('Dismiss')"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="text-center mb-3">
+        <i class="fas fa-fw fa-folder-plus primary-text" style="font-size: 75px"></i>
+      </div>
+      <ul class="list-group list-group-box mb-0">
+        <li class="list-group-item d-flex flex-column flex-md-row align-items-center">
+          <label for="form-name" class="mb-2 mb-md-0 w-100 w-md-50">{{ 'accessories.room_name' | translate }}</label>
+          <div class="text-left text-md-right w-100 w-md-50">
+            <input
+              autocomplete="off"
+              type="text"
+              id="form-name"
+              autofocus
+              class="form-control custom-input"
+              [(ngModel)]="roomName"
+              [ngModelOptions]="{ standalone: true }"
+              (keyup.enter)="$activeModal.close(roomName)"
+            />
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="modal-footer justify-content-between">
+      <div class="text-left">
+        <button type="button" class="btn btn-elegant" data-dismiss="modal" (click)="$activeModal.dismiss('Dismiss')">
+          {{ 'form.button_close' | translate }}
+        </button>
+      </div>
+      <div class="text-center"></div>
+      <div class="text-right">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-dismiss="modal"
+          (click)="$activeModal.close(roomName)"
+          [disabled]="!roomName"
+        >
+          {{ 'form.button_save' | translate }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

@@ -1,13 +1,12 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { AccessoriesComponent } from '@/app/modules/accessories/accessories.component';
+import { NgModule } from '@angular/core'
+import { RouterModule, Routes } from '@angular/router'
 
 const routes: Routes = [
   {
     path: '',
-    component: AccessoriesComponent,
+    loadComponent: () => import('@/app/modules/accessories/accessories.component').then(m => m.AccessoriesComponent),
   },
-];
+]
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],

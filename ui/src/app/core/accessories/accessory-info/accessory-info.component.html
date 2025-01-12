@@ -1,0 +1,158 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title">{{ service.customName || service.serviceName }}</h5>
+    <button
+      type="button"
+      class="close"
+      data-dismiss="modal"
+      [attr.aria-label]="'form.button_close' | translate"
+      (click)="$activeModal.dismiss('Dismiss')"
+    >
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <ul class="list-group list-group-box mb-3">
+      <li class="list-group-item d-flex flex-column flex-md-row align-items-center">
+        <label for="form-name" class="mb-2 mb-md-0 w-100 w-md-50">{{ 'accessories.custom_name' | translate }}</label>
+        <div class="text-left text-md-right w-100 w-md-50">
+          <input
+            [ngModel]="service.customName || service.serviceName"
+            (ngModelChange)="service.customName = $event"
+            type="text"
+            id="form-name"
+            autocomplete="off"
+            class="form-control custom-input"
+          />
+        </div>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center flex-row pb-2">
+        <span class="text-left">{{ 'accessories.hide_this_accessory' | translate }}</span>
+        <div class="text-right grey-text">
+          <input
+            type="checkbox"
+            class="rendux-input"
+            [(ngModel)]="service.hidden"
+            id="hide-accessory"
+            [attr.aria-label]="'accessories.hide_this_accessory' | translate"
+          />
+          <label for="hide-accessory" class="rendux-label ml-3"></label>
+        </div>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center flex-row pb-2">
+        <span class="text-left">{{ 'accessories.show_on_dashboard' | translate }}</span>
+        <div class="text-right grey-text">
+          <input
+            type="checkbox"
+            class="rendux-input mb-0"
+            [(ngModel)]="service.onDashboard"
+            id="show-on-dashboard"
+            [attr.aria-label]="'accessories.show_on_dashboard' | translate"
+          />
+          <label for="show-on-dashboard" class="rendux-label ml-3"></label>
+        </div>
+      </li>
+    </ul>
+    <ul class="list-group list-group-box mb-3">
+      <li class="list-group-item">
+        <h6 class="mb-0 text-center">{{ 'accessories.service_info' | translate }}</h6>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'accessories.service' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ service.humanType }}</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'accessories.name' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ service.serviceName }}</span>
+      </li>
+      @for (characteristic of service.serviceCharacteristics; track characteristic) {
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ characteristic.description }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">
+          @switch (characteristic.unit) { @case ('percentage') { {{ characteristic.value }}% } @case ('celsius') { {{
+          characteristic.value | convertTemp }}&deg; } @default { {{ characteristic.value }} } }</span
+        >
+      </li>
+      }
+    </ul>
+    <ul class="list-group list-group-box mb-0">
+      <li class="list-group-item">
+        <h6 class="mb-0 text-center">{{ 'accessories.accessory_info' | translate }}</h6>
+      </li>
+      @if (matchedCachedAccessory) {
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'accessories.plugin' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ matchedCachedAccessory.plugin }}</span>
+      </li>
+      @if(matchedCachedAccessory.platform) {
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'child_bridge.config.platform' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ matchedCachedAccessory.platform }}</span>
+      </li>
+      } @if(matchedCachedAccessory.accessory) {
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'child_bridge.config.accessory' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ matchedCachedAccessory.accessory }}</span>
+      </li>
+      } } @for (information of accessoryInformation; track information) {
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ information.key }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ information.value }}</span>
+      </li>
+      }
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'accessories.bridge_username' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ service.instance.username }}</span>
+      </li>
+      @if (matchedCachedAccessory) {
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'accessories.bridge_name' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ matchedCachedAccessory.bridge }}</span>
+      </li>
+      }
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'accessories.bridge_ip' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ service.instance.ipAddress }}</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left">{{ 'accessories.bridge_port' | translate }}</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ service.instance.port }}</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left text-monospace">aid</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ service.aid }}</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left text-monospace">iid</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ service.iid }}</span>
+      </li>
+      @if (matchedCachedAccessory) {
+      <li class="list-group-item d-flex justify-content-between align-items-left flex-column flex-md-row">
+        <span class="text-left text-monospace">UUID</span>
+        <span class="text-left text-md-right grey-text text-monospace">{{ matchedCachedAccessory.UUID }}</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span class="text-left">{{ 'accessories.button_remove' | translate }}</span>
+        <button (click)="removeSingleCachedAccessories()" class="btn btn-primary m-0 ml-3">
+          <i class="fas fa-fw fa-arrow-right"></i>
+        </button>
+      </li>
+      }
+    </ul>
+  </div>
+  <div class="modal-footer justify-content-between">
+    <div class="text-left"></div>
+    <div class="text-center">
+      <button
+        type="button"
+        class="btn btn-elegant"
+        data-dismiss="modal"
+        (click)="$activeModal.dismiss('Dismiss')"
+        [attr.aria-label]="'form.button_close' | translate"
+      >
+        {{ 'form.button_close' | translate }}
+      </button>
+    </div>
+    <div class="text-right"></div>
+  </div>
+</div>

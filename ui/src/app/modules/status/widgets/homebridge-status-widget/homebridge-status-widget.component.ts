@@ -1,36 +1,48 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
-import { ManagePluginsService } from '@/app/core/manage-plugins/manage-plugins.service';
-import { SettingsService } from '@/app/core/settings.service';
-import { IoNamespace, WsService } from '@/app/core/ws.service';
+import { NgClass } from '@angular/common'
+import { Component, inject, Input, OnInit } from '@angular/core'
+import { RouterLink } from '@angular/router'
+import { TranslatePipe, TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { firstValueFrom } from 'rxjs'
+
+import { ManagePluginsService } from '@/app/core/manage-plugins/manage-plugins.service'
+import { SettingsService } from '@/app/core/settings.service'
+import { IoNamespace, WsService } from '@/app/core/ws.service'
 
 @Component({
-  selector: 'app-homebridge-status-widget',
   templateUrl: './homebridge-status-widget.component.html',
   styleUrls: ['./homebridge-status-widget.component.scss'],
+  standalone: true,
+  imports: [
+    NgClass,
+    RouterLink,
+    TranslatePipe,
+  ],
 })
 export class HomebridgeStatusWidgetComponent implements OnInit {
-  @Input() widget: any;
+  $plugin = inject(ManagePluginsService)
+  private $settings = inject(SettingsService)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
+  private $ws = inject(WsService)
 
-  public homebridgePkg = {} as any;
-  public homebridgeUiPkg = {} as any;
-  public homebridgeStatus = {} as any;
-  public homebridgePluginStatus = [] as any;
+  @Input() widget: any
 
-  private io: IoNamespace;
+  public homebridgePkg = {} as any
+  public homebridgeUiPkg = {} as any
+  public homebridgeStatus = {} as any
+  public homebridgePluginStatus = [] as any
+  public homebridgePluginStatusDone = false as boolean
 
-  constructor(
-    private $ws: WsService,
-    private $settings: SettingsService,
-    public $toastr: ToastrService,
-    public $plugin: ManagePluginsService,
-  ) {}
+  private io: IoNamespace
+
+  constructor() {}
 
   async ngOnInit() {
-    this.io = this.$ws.getExistingNamespace('status');
+    this.io = this.$ws.getExistingNamespace('status')
     this.io.socket.on('homebridge-status', (data) => {
-      this.homebridgeStatus = data;
-    });
+      this.homebridgeStatus = data
+    })
 
     this.io.connected.subscribe(async () => {
       await Promise.all([
@@ -38,8 +50,8 @@ export class HomebridgeStatusWidgetComponent implements OnInit {
         this.checkHomebridgeVersion(),
         this.checkHomebridgeUiVersion(),
         this.getOutOfDatePlugins(),
-      ]);
-    });
+      ])
+    })
 
     if (this.io.socket.connected) {
       await Promise.all([
@@ -47,44 +59,49 @@ export class HomebridgeStatusWidgetComponent implements OnInit {
         this.checkHomebridgeVersion(),
         this.checkHomebridgeUiVersion(),
         this.getOutOfDatePlugins(),
-      ]);
+      ])
     }
 
     this.io.socket.on('disconnect', () => {
-      this.homebridgeStatus.status = 'down';
-    });
+      this.homebridgeStatus.status = 'down'
+    })
   }
 
   async getHomebridgeStatus() {
-    this.homebridgeStatus = await this.io.request('get-homebridge-status').toPromise();
+    this.homebridgeStatus = await firstValueFrom(this.io.request('get-homebridge-status'))
   }
 
   async checkHomebridgeVersion() {
     try {
-      const response = await this.io.request('homebridge-version-check').toPromise();
-      this.homebridgePkg = response;
-      this.$settings.env.homebridgeVersion = response.installedVersion;
-    } catch (err) {
-      this.$toastr.error(err.message);
+      const response = await firstValueFrom(this.io.request('homebridge-version-check'))
+      this.homebridgePkg = response
+      this.homebridgePkg.displayName = 'Homebridge'
+      this.$settings.env.homebridgeVersion = response.installedVersion
+    } catch (error) {
+      console.error(error)
+      this.$toastr.error(error.message, this.$translate.instant('toast.title_error'))
     }
   }
 
   async checkHomebridgeUiVersion() {
     try {
-      const response = await this.io.request('homebridge-ui-version-check').toPromise();
-      this.homebridgeUiPkg = response;
-      this.$settings.env.homebridgeUiVersion = response.installedVersion;
-    } catch (err) {
-      this.$toastr.error(err.message);
+      const response = await firstValueFrom(this.io.request('homebridge-ui-version-check'))
+      this.homebridgeUiPkg = response
+      this.$settings.env.homebridgeUiVersion = response.installedVersion
+    } catch (error) {
+      console.error(error)
+      this.$toastr.error(error.message, this.$translate.instant('toast.title_error'))
     }
   }
 
   async getOutOfDatePlugins() {
     try {
-      const outOfDatePlugins = await this.io.request('get-out-of-date-plugins').toPromise();
-      this.homebridgePluginStatus = outOfDatePlugins.filter((x) => x.name !== 'homebridge-config-ui-x');
-    } catch (err) {
-      this.$toastr.error(err.message);
+      const outOfDatePlugins = await firstValueFrom(this.io.request('get-out-of-date-plugins'))
+      this.homebridgePluginStatus = outOfDatePlugins.filter((x: any) => x.name !== 'homebridge-config-ui-x')
+      this.homebridgePluginStatusDone = true
+    } catch (error) {
+      console.error(error)
+      this.$toastr.error(error.message, this.$translate.instant('toast.title_error'))
     }
   }
 }

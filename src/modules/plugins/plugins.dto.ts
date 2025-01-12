@@ -5,38 +5,38 @@ import {
   IsOptional,
   IsString,
   Matches,
-} from 'class-validator';
+} from 'class-validator'
 
 export class HomebridgeUpdateActionDto {
   @IsOptional()
   @IsString()
-    version?: string;
+  version?: string
 
   @IsOptional()
   @IsNumber()
-    termCols?: number;
+  termCols?: number
 
   @IsOptional()
   @IsNotEmpty()
-    termRows?: number;
+  termRows?: number
 }
 
 export class PluginActionDto {
   @IsDefined()
   @IsNotEmpty()
   @IsString()
-  @Matches(/^((@[\w-]*)\/)?(homebridge-[\w-]*)$/)
-    name: string;
+  @Matches(/^(@[\w-]+(\.[\w-]+)*\/)?homebridge-[\w-]+$/)
+  name: string
 
   @IsOptional()
   @IsString()
-    version?: string;
+  version?: string
 
   @IsOptional()
   @IsNumber()
-    termCols?: number;
+  termCols?: number
 
   @IsOptional()
   @IsNotEmpty()
-    termRows?: number;
+  termRows?: number
 }

@@ -1,23 +1,33 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
+import { NgClass } from '@angular/common'
+import { Component, Input } from '@angular/core'
+import { TranslatePipe } from '@ngx-translate/core'
+import { InlineSVGModule } from 'ng-inline-svg-2'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
 
 @Component({
   selector: 'app-occupancysensor',
   templateUrl: './occupancysensor.component.html',
   styleUrls: ['./occupancysensor.component.scss'],
+  standalone: true,
+  imports: [
+    NgClass,
+    InlineSVGModule,
+    TranslatePipe,
+  ],
 })
-export class OccupancysensorComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
+export class OccupancysensorComponent {
+  @Input() public service: ServiceTypeX
 
   constructor() {}
 
-  ngOnInit() {}
-
   onClick() {
-    console.log('short click');
+    // eslint-disable-next-line no-console
+    console.log('short click')
   }
 
   onLongClick() {
-    console.log('long clicked');
+    // eslint-disable-next-line no-console
+    console.log('long clicked')
   }
 }

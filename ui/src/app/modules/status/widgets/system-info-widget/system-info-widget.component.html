@@ -1,107 +1,120 @@
 <div class="flex-column d-flex align-items-stretch h-100 w-100 pb-1 overflow-auto no-scrollbars">
-  <div style="cursor: move;" class="drag-handler p-2" [translate]="'status.widget.label_systeminfo'">
-    System Information
+  <div class="drag-handler p-2" [ngClass]="{ 'widget-cursor': widget.draggable }">
+    {{ 'status.widget.info' | translate }}
   </div>
-  <div class="d-flex flex-wrap w-100 pl-1 pr-1" *ngIf="serverInfo">
+  @if (serverInfo) {
+  <div class="d-flex flex-wrap w-100 px-1">
     <table class="table table-sm table-borderless gridster-item-content">
       <tbody>
-        <tr *ngIf="serverInfo.os">
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_os'">OS</th>
-          <td [ngSwitch]="serverInfo.os.platform" *ngIf="!serverInfo.homebridgeRunningInSynologyPackage">
-            <span *ngSwitchCase="'darwin'">
-              {{ serverInfo.os.codename }}
-            </span>
-            <span *ngSwitchCase="'win32'">
-              {{ serverInfo.os.distro }}
-            </span>
-            <span *ngSwitchDefault>
-              <a *ngIf="nodejsInfo.showGlibcUnsupportedWarning" class="system-info-link" href="javascript:void(0)" (click)="glibcVersionModal()">
+        @if (serverInfo.os) {
+        <tr>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.os' | translate }}</th>
+          @if (!serverInfo.homebridgeRunningInSynologyPackage) {
+          <td class="grey-text">
+            @switch (serverInfo.os.platform) { @case ('darwin') {
+            <span> {{ serverInfo.os.codename }} </span>
+            } @case ('win32') {
+            <span> {{ serverInfo.os.distro }} </span>
+            } @default {
+            <span>
+              @if (nodejsInfo.showGlibcUnsupportedWarning) {
+              <a class="system-info-link" href="javascript:void(0)" (click)="glibcVersionModal()">
                 <i class="primary-text fas fa-fw fa-exclamation-circle"></i>
-              </a> {{ serverInfo.os.distro }} {{ serverInfo.os.codename | titlecase }} ({{ serverInfo.os.release }})
+              </a>
+              } {{ serverInfo.os.distro }} {{ serverInfo.os.codename | titlecase }} ({{ serverInfo.os.release }})
             </span>
+            } }
           </td>
-          <td *ngIf="serverInfo.homebridgeRunningInSynologyPackage">
-            Synology DSM
-          </td>
+          } @if (serverInfo.homebridgeRunningInSynologyPackage) {
+          <td class="grey-text">Synology DSM</td>
+          }
         </tr>
-        <tr *ngIf="serverInfo.network.ip4">
+        } @if (serverInfo.network.ip4) {
+        <tr>
           <th scope="row" class="text-nowrap">
-            {{ 'status.widget.systeminfo.label_ipv4' | translate }} ({{ serverInfo.network.iface }})
+            {{ 'status.widget.info.ipv4' | translate }} ({{ serverInfo.network.iface }})
           </th>
-          <td>{{ serverInfo.network.ip4 }}</td>
+          <td class="grey-text">{{ serverInfo.network.ip4 }}</td>
         </tr>
-        <tr *ngIf="serverInfo.network.ip6">
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_timezone'">
-            {{ 'status.widget.systeminfo.label_ipv6' | translate }} ({{ serverInfo.network.iface }})
+        } @if (serverInfo.network.ip6) {
+        <tr>
+          <th scope="row" class="text-nowrap">
+            {{ 'status.widget.info.ipv6' | translate }} ({{ serverInfo.network.iface }})
           </th>
-          <td>{{ serverInfo.network.ip6 }}</td>
+          <td class="grey-text">{{ serverInfo.network.ip6 }}</td>
         </tr>
-        <tr *ngIf="serverInfo.os">
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_hostname'">Hostname</th>
-          <td>{{ serverInfo.os.hostname }}</td>
+        } @if (serverInfo.os) {
+        <tr>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.hostname' | translate }}</th>
+          <td class="grey-text">{{ serverInfo.os.hostname }}</td>
+        </tr>
+        }
+        <tr>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.service_user' | translate }}</th>
+          <td class="grey-text">{{ serverInfo.serviceUser }}</td>
         </tr>
         <tr>
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_service_user'">User</th>
-          <td>{{ serverInfo.serviceUser }}</td>
-        </tr>
-        <tr>
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_nodejs_version'">
-            Node.js Version
-          </th>
-          <td>
-            <a *ngIf="nodejsInfo.updateAvailable && !nodejsInfo.showNodeUnsupportedWarning" href="javascript:void(0)" class="system-info-link"
-              (click)="nodeUpdateModal()">
-              <i class="primary-text fas fa-fw fa-circle-up"></i> {{ serverInfo.nodeVersion }}
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.nodejs_version' | translate }}</th>
+          <td class="grey-text">
+            @if (nodejsInfo.updateAvailable && !nodejsInfo.showNodeUnsupportedWarning &&
+            !serverInfo.homebridgeRunningInSynologyPackage) {
+            <a href="javascript:void(0)" class="system-info-link" (click)="nodeUpdateModal()">
+              <i class="primary-text fas fa-fw fa-circle-up"></i>
+              <span class="grey-text"> {{ serverInfo.nodeVersion }}</span>
             </a>
-            <a *ngIf="nodejsInfo.showNodeUnsupportedWarning && !nodejsInfo.updateAvailable" href="javascript:void(0)" class="system-info-link"
-              (click)="nodeUnsupportedModal()">
-              <i class="primary-text fas fa-fw fa-exclamation-circle"></i> {{ serverInfo.nodeVersion }}
+            } @if (nodejsInfo.showNodeUnsupportedWarning && !nodejsInfo.updateAvailable) {
+            <a href="javascript:void(0)" class="system-info-link" (click)="nodeUnsupportedModal()">
+              <i class="primary-text fas fa-fw fa-exclamation-circle"></i>
+              <span class="grey-text"> {{ serverInfo.nodeVersion }}</span>
             </a>
-            <span *ngIf="!nodejsInfo.showNodeUnsupportedWarning && !nodejsInfo.updateAvailable">
-              {{ serverInfo.nodeVersion }}
-            </span>
+            } @if (!nodejsInfo.showNodeUnsupportedWarning && !nodejsInfo.updateAvailable) {
+            <span> {{ serverInfo.nodeVersion }} </span>
+            }
           </td>
         </tr>
         <tr>
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_nodejs_path'">Node.js Path</th>
-          <td>{{ nodejsInfo.installPath }}</td>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.nodejs_path' | translate }}</th>
+          <td class="grey-text">{{ nodejsInfo.installPath }}</td>
         </tr>
         <tr>
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_storage_path'">Storage Path</th>
-          <td>{{ serverInfo.homebridgeStoragePath }}</td>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.storage_path' | translate }}</th>
+          <td class="grey-text">{{ serverInfo.homebridgeStoragePath }}</td>
         </tr>
         <tr>
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_config_path'">Config Path</th>
-          <td>{{ serverInfo.homebridgeConfigJsonPath }}</td>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.config_path' | translate }}</th>
+          <td class="grey-text">{{ serverInfo.homebridgeConfigJsonPath }}</td>
         </tr>
         <tr>
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_plugin_path'">Plugin Path</th>
-          <td>{{ serverInfo.homebridgeCustomPluginPath || serverInfo.homebridgePluginPath }}</td>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.plugin_path' | translate }}</th>
+          <td class="grey-text">{{ serverInfo.homebridgeCustomPluginPath || serverInfo.homebridgePluginPath }}</td>
         </tr>
         <tr>
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_timezone'">Timezone</th>
-          <td>{{ serverInfo.time.timezone }}</td>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.timezone' | translate }}</th>
+          <td class="grey-text">{{ serverInfo.time.timezone }}</td>
         </tr>
-        <tr *ngIf="serverInfo.homebridgeRunningInDocker">
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_docker'">Docker</th>
-          <td class="text-nowrap" [translate]="'status.widget.systeminfo.label_yes'">Yes</td>
+        @if (serverInfo.homebridgeRunningInDocker) {
+        <tr>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.docker' | translate }}</th>
+          <td class="text-nowrap grey-text">{{ 'status.widget.info.yes' | translate }}</td>
         </tr>
-        <tr *ngIf="serverInfo.homebridgeRunningInSynologyPackage">
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_synology_package'">
-            Synology Package
-          </th>
-          <td class="text-nowrap" [translate]="'status.widget.systeminfo.label_yes'">Yes</td>
+        } @if (serverInfo.homebridgeRunningInSynologyPackage) {
+        <tr>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.synology_package' | translate }}</th>
+          <td class="text-nowrap grey-text">{{ 'status.widget.info.yes' | translate }}</td>
         </tr>
-        <tr *ngIf="!serverInfo.homebridgeServiceMode">
-          <th scope="row" class="text-nowrap" [translate]="'status.widget.systeminfo.label_service_mode'">Service Mode
-          </th>
-          <td class="text-nowrap">
+        } @if (!serverInfo.homebridgeServiceMode) {
+        <tr>
+          <th scope="row" class="text-nowrap">{{ 'status.widget.info.service_mode' | translate }}</th>
+          <td class="text-nowrap grey-text">
             <a class="system-info-link" href="javascript:void(0)" (click)="serviceModeModal()">
               <i class="primary-text fas fa-fw fa-exclamation-circle"></i>
-            </a> {{ 'status.widget.systeminfo.label_disabled' | translate }}
+            </a>
+            <span class="grey-text"> {{ 'status.widget.info.disabled' | translate }}</span>
           </td>
         </tr>
+        }
       </tbody>
     </table>
   </div>
+  }
 </div>

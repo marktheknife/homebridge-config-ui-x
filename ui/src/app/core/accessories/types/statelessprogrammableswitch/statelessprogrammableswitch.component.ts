@@ -1,15 +1,16 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
+import { Component, Input } from '@angular/core'
+import { InlineSVGModule } from 'ng-inline-svg-2'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
 
 @Component({
   selector: 'app-statelessprogrammableswitch',
   templateUrl: './statelessprogrammableswitch.component.html',
-  styleUrls: ['./statelessprogrammableswitch.component.scss'],
+  standalone: true,
+  imports: [InlineSVGModule],
 })
-export class StatelessprogrammableswitchComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
+export class StatelessprogrammableswitchComponent {
+  @Input() public service: ServiceTypeX
 
   constructor() {}
-
-  ngOnInit() {}
 }

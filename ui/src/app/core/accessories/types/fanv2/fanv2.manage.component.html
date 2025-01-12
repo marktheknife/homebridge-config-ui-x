@@ -1,37 +1,55 @@
 <div class="modal-content">
   <div class="modal-header">
     <h5 class="modal-title" [innerText]="service.customName || service.serviceName"></h5>
-    <button type="button" class="close" data-dismiss="modal" [attr.aria-label]="'form.button_close' | translate"
-      (click)="activeModal.dismiss('Dismiss')">
+    <button
+      type="button"
+      class="close"
+      data-dismiss="modal"
+      [attr.aria-label]="'form.button_close' | translate"
+      (click)="$activeModal.dismiss('Dismiss')"
+    >
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
   <div class="modal-body text-center px-5">
-
     <h5>
       <strong>
-        {{ 'accessories.control.label_fan' | translate }}
-        {{ (service.values.Active ? 'accessories.control.label_on' : 'accessories.control.label_off') | translate }}
+        {{ 'accessories.control.fan' | translate }} {{ (service.values.Active ? 'accessories.control.on' :
+        'accessories.control.off') | translate }}
       </strong>
     </h5>
 
-    <div class="fan-mode-control btn-group btn-group-toggle d-flex justify-content-center mb-4 mt-4" ngbRadioGroup
-      name="radioBasic" [(ngModel)]="targetMode" (change)="onTargetStateChange()">
-      <label ngbButtonLabel class="btn-primary">
-        <input ngbButton type="radio" [value]="0"> {{ 'accessories.control.label_off' | translate }}
-      </label>
-      <label ngbButtonLabel class="btn-primary">
-        <input ngbButton type="radio" [value]="1"> {{ 'accessories.control.label_on' | translate }}
-      </label>
+    <div class="btn-group-vertical d-flex justify-content-center mb-4 p-0" role="group" aria-label="Fan Mode Control">
+      <button
+        type="button"
+        class="btn btn-primary mb-0 mx-0 px-0 py-2"
+        (click)="setTargetMode(0)"
+        [style.opacity]="targetMode === 0 ? '1' : '0.75'"
+      >
+        {{ 'accessories.control.off' | translate }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary mb-0 mx-0 px-0 py-2"
+        (click)="setTargetMode(1)"
+        [style.opacity]="targetMode === 1 ? '1' : '0.75'"
+      >
+        {{ 'accessories.control.on' | translate }}
+      </button>
     </div>
 
-    <div *ngIf="targetRotationSpeed">
-      <h5 class="mb-0">{{ 'accessories.control.label_rotation_speed' | translate }}</h5>
-      <p>{{ targetRotationSpeed.value }}<span *ngIf="targetRotationSpeed.unit === 'percentage'">%</span></p>
-      <nouislider [min]="targetRotationSpeed.min" [max]="targetRotationSpeed.max" [step]="targetRotationSpeed.step"
-        [(ngModel)]="targetRotationSpeed.value" (ngModelChange)="onTargetRotationSpeedChange()">
-      </nouislider>
-    </div>
-
+    @if (targetRotationSpeed) {
+    <h5 class="mb-0">{{ 'accessories.control.rotation_speed' | translate }}</h5>
+    <p>{{ targetRotationSpeed.value }}@if (targetRotationSpeed.unit === 'percentage') { % }</p>
+    <nouislider
+      [min]="targetRotationSpeed.min"
+      [max]="targetRotationSpeed.max"
+      [step]="targetRotationSpeed.step"
+      [(ngModel)]="targetRotationSpeed.value"
+      (ngModelChange)="onTargetRotationSpeedChange()"
+    >
+    </nouislider>
+    }
   </div>
+  <div class="modal-footer"></div>
 </div>

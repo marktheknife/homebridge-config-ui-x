@@ -1,13 +1,10 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { AdminGuard } from '@/app/core/auth/admin.guard';
-import { AuthGuard } from '@/app/core/auth/auth.guard';
-import { LoginComponent } from '@/app/modules/login/login.component';
-import { LoginGuard } from '@/app/modules/login/login.guard';
-import { RestartComponent } from '@/app/modules/restart/restart.component';
-import { SetupWizardGuard } from '@/app/modules/setup-wizard/setup-wizard.guard';
-import { StatusComponent } from '@/app/modules/status/status.component';
-import { LayoutComponent } from '@/app/shared/layout/layout.component';
+import { NgModule } from '@angular/core'
+import { RouterModule, Routes } from '@angular/router'
+
+import { AdminGuard } from '@/app/core/auth/admin.guard'
+import { AuthGuard } from '@/app/core/auth/auth.guard'
+import { LoginGuard } from '@/app/modules/login/login.guard'
+import { SetupWizardGuard } from '@/app/modules/setup-wizard/setup-wizard.guard'
 
 /*
  * The status and restart modules should not be lazy loaded
@@ -17,7 +14,7 @@ import { LayoutComponent } from '@/app/shared/layout/layout.component';
 const routes: Routes = [
   {
     path: 'login',
-    component: LoginComponent,
+    loadComponent: () => import('@/app/modules/login/login.component').then(m => m.LoginComponent),
     canActivate: [LoginGuard],
   },
   {
@@ -27,16 +24,16 @@ const routes: Routes = [
   },
   {
     path: '',
-    component: LayoutComponent,
+    loadComponent: () => import('@/app/shared/layout/layout.component').then(m => m.LayoutComponent),
     canActivate: [AuthGuard],
     children: [
       {
         path: '',
-        component: StatusComponent,
+        loadComponent: () => import('@/app/modules/status/status.component').then(m => m.StatusComponent),
       },
       {
         path: 'restart',
-        component: RestartComponent,
+        loadComponent: () => import('@/app/modules/restart/restart.component').then(m => m.RestartComponent),
         canActivate: [AdminGuard],
       },
       {
@@ -72,49 +69,22 @@ const routes: Routes = [
         loadChildren: () => import('./modules/support/support.module').then(m => m.SupportModule),
       },
       {
+        path: 'power-options',
+        loadChildren: () => import('./modules/power-options/power-options.module').then(m => m.PowerOptionsModule),
+      },
+      {
         path: 'platform-tools',
         loadChildren: () => import('./modules/platform-tools/platform-tools.module').then(m => m.PlatformToolsModule),
         canActivate: [AdminGuard],
       },
-      // redirects from old urls below
-      {
-        path: 'docker/terminal',
-        redirectTo: 'platform-tools/terminal',
-      },
-      {
-        path: 'docker/startup-script',
-        redirectTo: 'platform-tools/docker/startup-script',
-      },
-      {
-        path: 'docker/restart',
-        redirectTo: 'platform-tools/docker/restart-container',
-      },
-      {
-        path: 'docker/settings',
-        redirectTo: 'platform-tools/docker/settings',
-      },
-      {
-        path: 'linux/terminal',
-        redirectTo: 'platform-tools/terminal',
-      },
-      {
-        path: 'linux/restart',
-        redirectTo: 'platform-tools/linux/restart-server',
-      },
-      {
-        path: 'linux/shutdown',
-        redirectTo: 'platform-tools/linux/shutdown-server',
-      },
-      {
-        path: 'platform-tools/docker/settings',
-        redirectTo: '/settings',
-      },
     ],
   },
   {
-    path: '**', pathMatch: 'full', redirectTo: '/',
+    path: '**',
+    pathMatch: 'full',
+    redirectTo: '/',
   },
-];
+]
 
 @NgModule({
   imports: [RouterModule.forRoot(routes, {

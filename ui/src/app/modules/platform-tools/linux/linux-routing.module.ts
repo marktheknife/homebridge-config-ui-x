@@ -1,7 +1,5 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { RestartLinuxComponent } from '@/app/modules/platform-tools/linux/restart-linux/restart-linux.component';
-import { ShutdownLinuxComponent } from '@/app/modules/platform-tools/linux/shutdown-linux/shutdown-linux.component';
+import { NgModule } from '@angular/core'
+import { RouterModule, Routes } from '@angular/router'
 
 const routes: Routes = [
   {
@@ -11,13 +9,13 @@ const routes: Routes = [
   },
   {
     path: 'restart-server',
-    component: RestartLinuxComponent,
+    loadComponent: () => import('@/app/modules/platform-tools/linux/restart-linux/restart-linux.component').then(m => m.RestartLinuxComponent),
   },
   {
     path: 'shutdown-server',
-    component: ShutdownLinuxComponent,
+    loadComponent: () => import('@/app/modules/platform-tools/linux/shutdown-linux/shutdown-linux.component').then(m => m.ShutdownLinuxComponent),
   },
-];
+]
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],

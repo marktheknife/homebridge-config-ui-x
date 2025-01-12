@@ -1,143 +1,143 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
-import { Title } from '@angular/platform-browser';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateService } from '@ngx-translate/core';
-import { ToastrService } from 'ngx-toastr';
-import { ApiService } from '@/app/core/api.service';
-import { AuthService } from '@/app/core/auth/auth.service';
-import { SettingsService } from '@/app/core/settings.service';
-import { RestoreComponent } from '@/app/modules/settings/restore/restore.component';
-import { environment } from '@/environments/environment';
+import { NgClass } from '@angular/common'
+import { Component, inject, OnDestroy, OnInit } from '@angular/core'
+import { AbstractControl, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms'
+import { Title } from '@angular/platform-browser'
+import { RouterLink } from '@angular/router'
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe, TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { firstValueFrom } from 'rxjs'
+
+import { ApiService } from '@/app/core/api.service'
+import { AuthService } from '@/app/core/auth/auth.service'
+import { SettingsService } from '@/app/core/settings.service'
+import { RestoreComponent } from '@/app/modules/settings/backup/restore/restore.component'
+import { environment } from '@/environments/environment'
 
 @Component({
-  selector: 'app-setup-wizard',
   templateUrl: './setup-wizard.component.html',
   styleUrls: ['./setup-wizard.component.scss'],
+  standalone: true,
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    NgClass,
+    RouterLink,
+    TranslatePipe,
+  ],
 })
 export class SetupWizardComponent implements OnInit, OnDestroy {
-  public previousTitle: string;
-  public step: 'welcome' | 'create-account' | 'setup-complete' | 'restore-backup' | 'restarting' = 'welcome';
+  private $api = inject(ApiService)
+  private $auth = inject(AuthService)
+  private $modal = inject(NgbModal)
+  private $settings = inject(SettingsService)
+  private $title = inject(Title)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
+
+  public previousTitle: string
+  public step: 'welcome' | 'create-account' | 'setup-complete' | 'restore-backup' | 'restarting' = 'welcome'
 
   public createUserForm = new FormGroup({
     username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.compose([Validators.required, Validators.minLength(4)])]),
     passwordConfirm: new FormControl('', [Validators.required]),
-  }, this.matchPassword);
+  }, this.matchPassword)
 
-  public loading = false;
+  public loading = false
 
-  public selectedFile: File;
-  public restoreUploading = false;
+  public selectedFile: File
+  public restoreUploading = false
 
-  constructor(
-    private $modal: NgbModal,
-    private $translate: TranslateService,
-    private $toastr: ToastrService,
-    private $title: Title,
-    private $api: ApiService,
-    private $auth: AuthService,
-    private $settings: SettingsService,
-  ) {}
+  constructor() {}
 
   ngOnInit(): void {
-    this.previousTitle = this.$title.getTitle();
-    this.$title.setTitle('Setup Homebridge');
-    window.document.querySelector('body').classList.remove('body-top-padding');
+    this.previousTitle = this.$title.getTitle()
+    this.$title.setTitle('Setup Homebridge')
   }
 
   matchPassword(AC: AbstractControl) {
-    const password = AC.get('password').value;
-    const passwordConfirm = AC.get('passwordConfirm').value;
+    const password = AC.get('password').value
+    const passwordConfirm = AC.get('passwordConfirm').value
     if (password !== passwordConfirm) {
-      AC.get('passwordConfirm').setErrors({ matchPassword: true });
+      AC.get('passwordConfirm').setErrors({ matchPassword: true })
     } else {
-      return null;
+      return null
     }
   }
 
   ngOnDestroy() {
-    this.$title.setTitle(this.previousTitle);
-    window.document.querySelector('body').classList.remove('body-top-padding');
+    this.$title.setTitle(this.previousTitle)
   }
 
   onClickGettingStarted() {
-    this.step = 'create-account';
+    this.step = 'create-account'
   }
 
   onClickRestoreBackup() {
-    this.step = 'restore-backup';
+    this.step = 'restore-backup'
   }
 
   onClickCancelRestore() {
-    this.selectedFile = null;
-    this.step = 'welcome';
+    this.selectedFile = null
+    this.step = 'welcome'
   }
 
   createFirstUser() {
-    this.loading = true;
+    this.loading = true
 
-    const payload = this.createUserForm.getRawValue() as Record<string, string>;
-    payload.name = payload.username;
+    const payload = this.createUserForm.getRawValue() as Record<string, string>
+    payload.name = payload.username
 
-    this.$api.post('/setup-wizard/create-first-user', payload).subscribe(
-      async () => {
-        this.$settings.env.setupWizardComplete = true;
+    this.$api.post('/setup-wizard/create-first-user', payload).subscribe({
+      next: async () => {
+        this.$settings.env.setupWizardComplete = true
         await this.$auth.login({
           username: payload.username,
           password: payload.password,
-        });
-        this.step = 'setup-complete';
+        })
+        this.step = 'setup-complete'
       },
-      (err) => {
-        this.loading = false;
-        this.$toastr.error(
-          err.error.message || this.$translate.instant('users.toast_failed_to_add_user'),
-          this.$translate.instant('toast.title_error'),
-        );
-      });
+      error: (error) => {
+        this.loading = false
+        console.error(error)
+        this.$toastr.error(error.error.message || this.$translate.instant('users.toast_failed_to_add_user'), this.$translate.instant('toast.title_error'))
+      },
+    })
   }
 
   handleRestoreFileInput(files: FileList) {
     if (files.length) {
-      this.selectedFile = files[0];
+      this.selectedFile = files[0]
     } else {
-      delete this.selectedFile;
+      delete this.selectedFile
     }
   }
 
   onRestoreBackupClick() {
-    this.restoreUploading = true;
-    this.uploadHomebridgeArchive();
+    this.restoreUploading = true
+    this.uploadHomebridgeArchive()
   }
 
   async uploadHomebridgeArchive() {
     try {
-      // get and set a temporary access token
-      const authorization = await this.$api.get('/setup-wizard/get-setup-wizard-token').toPromise();
-      window.localStorage.setItem(environment.jwt.tokenKey, authorization.access_token);
-      this.$auth.token = authorization.access_token;
+      // Get and set a temporary access token
+      const authorization = await firstValueFrom(this.$api.get('/setup-wizard/get-setup-wizard-token'))
+      window.localStorage.setItem(environment.jwt.tokenKey, authorization.access_token)
+      this.$auth.token = authorization.access_token
 
-      // upload archive
-      const formData: FormData = new FormData();
-      formData.append('restoreArchive', this.selectedFile, this.selectedFile.name);
-      await this.$api.post('/backup/restore', formData).toPromise();
+      // Upload archive
+      const formData: FormData = new FormData()
+      formData.append('restoreArchive', this.selectedFile, this.selectedFile.name)
+      await firstValueFrom(this.$api.post('/backup/restore', formData))
 
-      // open restore modal
-      this.openRestoreModal();
-      this.restoreUploading = false;
-
-    } catch (err) {
-      this.restoreUploading = false;
-      this.$toastr.error(
-        err.error.message || this.$translate.instant('users.toast_failed_to_add_user'),
-        this.$translate.instant('toast.title_error'),
-      );
+      // Open restore modal
+      this.openRestoreModal()
+      this.restoreUploading = false
+    } catch (error) {
+      this.restoreUploading = false
+      console.error(error)
+      this.$toastr.error(error.error.message || this.$translate.instant('users.toast_failed_to_add_user'), this.$translate.instant('toast.title_error'))
     }
   }
 
@@ -145,34 +145,34 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
     const ref = this.$modal.open(RestoreComponent, {
       size: 'lg',
       backdrop: 'static',
-    });
-    ref.componentInstance.setupWizardRestore = true;
+    })
+    ref.componentInstance.setupWizardRestore = true
 
     ref.result.then((success) => {
       if (success === true) {
-        this.waitForHomebridgeToRestart();
+        this.waitForHomebridgeToRestart()
       }
-    });
+    })
   }
 
   async waitForHomebridgeToRestart() {
-    this.step = 'restarting';
+    this.step = 'restarting'
 
-    // remove tokens
-    window.localStorage.removeItem(environment.jwt.tokenKey);
-    this.$auth.token = null;
+    // Remove tokens
+    window.localStorage.removeItem(environment.jwt.tokenKey)
+    this.$auth.token = null
 
-    // wait at least 15 seconds
-    await new Promise(resolve => setTimeout(resolve, 15000));
+    // Wait at least 15 seconds
+    await new Promise(resolve => setTimeout(resolve, 15000))
 
     const checkHomebridgeInterval = setInterval(async () => {
       try {
-        await this.$api.get('/auth/settings').toPromise();
-        clearInterval(checkHomebridgeInterval);
-        location.reload();
+        await firstValueFrom(this.$api.get('/auth/settings'))
+        clearInterval(checkHomebridgeInterval)
+        location.reload()
       } catch (e) {
-        // not up yet
+        // Not up yet
       }
-    }, 1000);
+    }, 1000)
   }
 }

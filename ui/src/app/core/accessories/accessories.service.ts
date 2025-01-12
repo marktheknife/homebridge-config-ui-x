@@ -1,143 +1,166 @@
-import { Injectable } from '@angular/core';
-import { ServiceType } from '@homebridge/hap-client';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ToastrService } from 'ngx-toastr';
-import { Subject } from 'rxjs';
-import { AuthService } from '../auth/auth.service';
-import { IoNamespace, WsService } from '../ws.service';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
-import { InfoModalComponent } from '@/app/core/accessories/info-modal/info-modal.component';
+import type { ServiceType } from '@homebridge/hap-client'
+
+import { inject, Injectable } from '@angular/core'
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { firstValueFrom, Subject } from 'rxjs'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
+import { AccessoryInfoComponent } from '@/app/core/accessories/accessory-info/accessory-info.component'
+import { ApiService } from '@/app/core/api.service'
+import { AuthService } from '@/app/core/auth/auth.service'
+import { IoNamespace, WsService } from '@/app/core/ws.service'
 
 @Injectable({
   providedIn: 'root',
 })
 export class AccessoriesService {
-  public layoutSaved = new Subject();
-  public accessoryData = new Subject();
-  public readyForControl = false;
-  public accessoryLayout: {
-    name: string; services: Array<{
-      aid: number;
-      iid: number;
-      uuid: string;
-      uniqueId: string;
-      hidden?: boolean;
-      onDashboard?: boolean;
-    }>;
-  }[];
+  private $api = inject(ApiService)
+  private $auth = inject(AuthService)
+  private $modal = inject(NgbModal)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
+  private $ws = inject(WsService)
 
-  public accessories: { services: ServiceType[] } = { services: [] };
-  public rooms: Array<{ name: string; services: ServiceTypeX[] }> = [];
-  private io: IoNamespace;
-  private roomsOrdered = false;
+  public layoutSaved = new Subject()
+  public accessoryData = new Subject()
+  public readyForControl = false
+  public accessoryLayout: {
+    name: string
+    services: Array<{
+      aid: number
+      iid: number
+      uuid: string
+      uniqueId: string
+      hidden?: boolean
+      onDashboard?: boolean
+    }>
+  }[]
+
+  public accessories: { services: ServiceType[] } = { services: [] }
+  public rooms: Array<{ name: string, services: ServiceTypeX[] }> = []
+  private io: IoNamespace
+  private roomsOrdered = false
   private hiddenTypes = [
     'InputSource',
     'CameraRTPStreamManagement',
     'ProtocolInformation',
-  ];
+  ]
 
-  constructor(
-    private modalService: NgbModal,
-    public $toastr: ToastrService,
-    private $ws: WsService,
-    public $auth: AuthService,
-  ) {}
+  private accessoryCache: any[] = []
+  private pairingCache: any[] = []
+
+  constructor() {
+    firstValueFrom(this.$api.get('/server/cached-accessories'))
+      .then((data) => {
+        this.accessoryCache = data
+      })
+      .catch(error => console.error(error))
+    firstValueFrom(this.$api.get('/server/pairings'))
+      .then((data) => {
+        this.pairingCache = data
+      })
+      .catch(error => console.error(error))
+  }
 
   /**
    *
    */
-  showAccessoryInformation(service) {
-    const ref = this.modalService.open(InfoModalComponent, {
+  showAccessoryInformation(service: any) {
+    const ref = this.$modal.open(AccessoryInfoComponent, {
       size: 'lg',
       backdrop: 'static',
-    });
+    })
 
-    ref.componentInstance.service = service;
+    ref.componentInstance.service = service
+    ref.componentInstance.accessoryCache = this.accessoryCache
+    ref.componentInstance.pairingCache = this.pairingCache
 
     ref.result
       .then(() => this.saveLayout())
-      .catch(() => this.saveLayout());
+      .catch(() => this.saveLayout())
 
-    return false;
+    return false
   }
 
   /**
    * Stop the accessory control session
    */
   public stop() {
-    this.io.end();
-    this.rooms = [];
-    this.accessories = { services: [] };
-    this.roomsOrdered = false;
-    delete this.accessoryLayout;
+    this.io.end()
+    this.rooms = []
+    this.accessories = { services: [] }
+    this.roomsOrdered = false
+    delete this.accessoryLayout
   }
 
   /**
    * Start the accessory control session
    */
   public async start() {
-    this.readyForControl = false;
+    this.readyForControl = false
 
-    // connect to the socket endpoint
-    this.io = this.$ws.connectToNamespace('accessories');
+    // Connect to the socket endpoint
+    this.io = this.$ws.connectToNamespace('accessories')
 
-    // load the room layout first
-    await this.loadLayout();
+    // Load the room layout first
+    await this.loadLayout()
 
-    // start accessory subscription
+    // Start accessory subscription
     if (this.io.connected) {
-      this.io.socket.emit('get-accessories');
+      this.io.socket.emit('get-accessories')
       setTimeout(() => {
         this.io.connected.subscribe(() => {
-          this.io.socket.emit('get-accessories');
-        });
-      }, 1000);
+          this.io.socket.emit('get-accessories')
+        })
+      }, 1000)
     } else {
       this.io.connected.subscribe(() => {
-        this.io.socket.emit('get-accessories');
-      });
+        this.io.socket.emit('get-accessories')
+      })
     }
 
-    // subscribe to accessory events
-    this.io.socket.on('accessories-data', (data: unknown) => {
-      this.parseServices(data);
-      this.generateHelpers();
-      this.sortIntoRooms();
+    // Subscribe to accessory events
+    this.io.socket.on('accessories-data', (data: ServiceType[]) => {
+      this.parseServices(data)
+      this.generateHelpers()
+      this.sortIntoRooms()
 
       if (!this.roomsOrdered) {
-        this.orderRooms();
-        this.applyCustomAttributes();
-        this.roomsOrdered = true;
+        this.orderRooms()
+        this.applyCustomAttributes()
+        this.roomsOrdered = true
       }
 
-      this.accessoryData.next(data);
-    });
+      this.accessoryData.next(data)
+    })
 
-    // when a new instance is available, do a self reload
+    // When a new instance is available, do a self reload
     this.io.socket.on('accessories-reload-required', async () => {
-      this.stop();
-      await this.start();
-    });
+      this.stop()
+      await this.start()
+    })
 
     this.io.socket.on('accessory-control-failure', (message: string) => {
-      this.$toastr.error(message);
-    });
+      console.error(message)
+      this.$toastr.error(message, this.$translate.instant('toast.title_error'))
+    })
 
-    // when the system is ready for accessory control
+    // When the system is ready for accessory control
     this.io.socket.on('accessories-ready-for-control', () => {
-      console.log('ready for control');
-      this.readyForControl = true;
-    });
+      this.readyForControl = true
+    })
   }
 
   /**
    * Save the room layout
    */
   public saveLayout() {
-    // generate layout schema to save to disk
-    this.accessoryLayout = this.rooms.map((room) => ({
+    // Generate layout schema to save to disk
+    this.accessoryLayout = this.rooms.map(room => ({
       name: room.name,
-      services: room.services.map((service) => ({
+      services: room.services.map(service => ({
         uniqueId: service.uniqueId,
         aid: service.aid,
         iid: service.iid,
@@ -146,48 +169,50 @@ export class AccessoriesService {
         hidden: service.hidden || undefined,
         onDashboard: service.onDashboard || undefined,
       })),
-    })).filter(room => room.services.length);
+    })).filter(room => room.services.length)
 
-    // send update request to server
-    this.io.request('save-layout', { user: this.$auth.user.username, layout: this.accessoryLayout })
-      .subscribe(
-        () => this.layoutSaved.next(undefined),
-        err => this.$toastr.error(err.message, 'Failed to save page layout'),
-      );
+    // Send update request to server
+    this.io.request('save-layout', { user: this.$auth.user.username, layout: this.accessoryLayout }).subscribe({
+      next: () => this.layoutSaved.next(undefined),
+      error: (error) => {
+        console.error(error)
+        this.$toastr.error(error.message, this.$translate.instant('toast.title_error'))
+      },
+    })
   }
 
   /**
    * Load the room layout
    */
   private async loadLayout() {
-    this.accessoryLayout = await this.io.request('get-layout', { user: this.$auth.user.username }).toPromise();
+    this.accessoryLayout = await firstValueFrom(this.io.request('get-layout', { user: this.$auth.user.username }))
 
-    // build empty room layout
-    this.rooms = this.accessoryLayout.map((room) => ({
+    // Build empty room layout
+    this.rooms = this.accessoryLayout.map(room => ({
       name: room.name,
       services: [],
-    }));
+    }))
   }
 
   /**
    * Parse the incoming accessory data and refresh existing accessory statuses
    */
-  private parseServices(services) {
+  private parseServices(services: ServiceType[]) {
     if (!this.accessories.services.length) {
-      this.accessories.services = services;
-      return;
+      this.accessories.services = services
+      return
     }
 
-    // update the existing objects to avoid re-painting the dom element each refresh
+    // Update the existing objects to avoid re-painting the dom element each refresh
     services.forEach((service) => {
-      const existing = this.accessories.services.find(x => x.uniqueId === service.uniqueId);
+      const existing = this.accessories.services.find(x => x.uniqueId === service.uniqueId)
 
       if (existing) {
-        Object.assign(existing, service);
+        Object.assign(existing, service)
       } else {
-        this.accessories.services.push(service);
+        this.accessories.services.push(service)
       }
-    });
+    })
   }
 
   /**
@@ -195,88 +220,80 @@ export class AccessoriesService {
    */
   private sortIntoRooms() {
     this.accessories.services.forEach((service) => {
-      // don't put hidden types into rooms
+      // Don't put hidden types into rooms
       if (this.hiddenTypes.includes(service.type)) {
-        return;
+        return
       }
 
-      // link services
+      // Link services
       if (service.linked) {
-        service.linkedServices = {};
+        service.linkedServices = {}
         service.linked.forEach((iid) => {
           service.linkedServices[iid] = this.accessories.services.find(s => s.aid === service.aid && s.iid === iid
-            && s.instance.username === service.instance.username);
-        });
+            && s.instance.username === service.instance.username)
+        })
       }
 
-      // check if the service has already been allocated to an active room
-      const inRoom = this.rooms.find(r => {
-        if (r.services.find(s => s.uniqueId === service.uniqueId)) {
-          return true;
-        }
-      });
+      // Check if the service has already been allocated to an active room
+      const inRoom = this.rooms.find(r => r.services.find(s => s.uniqueId === service.uniqueId))
 
-      // not in an active room, perhaps the service is in the layout cache
+      // Not in an active room, perhaps the service is in the layout cache
       if (!inRoom) {
-        const inCache = this.accessoryLayout.find(r => {
-          if (r.services.find(s => s.uniqueId === service.uniqueId)) {
-            return true;
-          }
-        });
+        const inCache = this.accessoryLayout.find(r => r.services.find(s => s.uniqueId === service.uniqueId))
 
         if (inCache) {
-          // it's in the cache, add to the correct room
-          this.rooms.find(r => r.name === inCache.name).services.push(service);
+          // It's in the cache, add to the correct room
+          this.rooms.find(r => r.name === inCache.name).services.push(service)
         } else {
-          // new accessory add the default room
-          const defaultRoom = this.rooms.find(r => r.name === 'Default Room');
+          // New accessory add the default room
+          const defaultRoom = this.rooms.find(r => r.name === 'Default Room')
 
-          // does the default room exist?
+          // Does the default room exist?
           if (defaultRoom) {
-            defaultRoom.services.push(service);
+            defaultRoom.services.push(service)
           } else {
             this.rooms.push({
               name: 'Default Room',
               services: [service],
-            });
+            })
           }
         }
       }
-    });
+    })
   }
 
   /**
    * Order the rooms on the screen
    */
   private orderRooms() {
-    // order the services within each room
+    // Order the services within each room
     this.rooms.forEach((room) => {
-      const roomCache = this.accessoryLayout.find(r => r.name === room.name);
+      const roomCache = this.accessoryLayout.find(r => r.name === room.name)
       room.services.sort((a, b) => {
-        const posA = roomCache.services.findIndex(s => s.uniqueId === a.uniqueId);
-        const posB = roomCache.services.findIndex(s => s.uniqueId === b.uniqueId);
+        const posA = roomCache.services.findIndex(s => s.uniqueId === a.uniqueId)
+        const posB = roomCache.services.findIndex(s => s.uniqueId === b.uniqueId)
         if (posA < posB) {
-          return -1;
+          return -1
         } else if (posA > posB) {
-          return 1;
+          return 1
         }
-        return 0;
-      });
-    });
+        return 0
+      })
+    })
   }
 
   /**
    * Setup custom attributes
    */
   private applyCustomAttributes() {
-    // apply custom saved attributes to the service
+    // Apply custom saved attributes to the service
     this.rooms.forEach((room) => {
-      const roomCache = this.accessoryLayout.find(r => r.name === room.name);
+      const roomCache = this.accessoryLayout.find(r => r.name === room.name)
       room.services.forEach((service) => {
-        const serviceCache = roomCache.services.find(s => s.uniqueId === service.uniqueId);
-        Object.assign(service, serviceCache);
-      });
-    });
+        const serviceCache = roomCache.services.find(s => s.uniqueId === service.uniqueId)
+        Object.assign(service, serviceCache)
+      })
+    })
   }
 
   /**
@@ -286,16 +303,15 @@ export class AccessoriesService {
     this.accessories.services.forEach((service) => {
       if (!service.getCharacteristic) {
         service.getCharacteristic = (type: string) => {
-
-          const characteristic = service.serviceCharacteristics.find(x => x.type === type);
+          const characteristic = service.serviceCharacteristics.find(x => x.type === type)
 
           if (!characteristic) {
-            return null;
+            return null
           }
 
           characteristic.setValue = (value: number | string | boolean) => new Promise((resolve) => {
             if (!this.readyForControl) {
-              resolve(undefined);
+              resolve(undefined)
             }
 
             this.io.socket.emit('accessory-control', {
@@ -306,13 +322,13 @@ export class AccessoriesService {
                 iid: characteristic.iid,
                 value,
               },
-            });
-            return resolve(undefined);
-          });
+            })
+            return resolve(undefined)
+          })
 
-          return characteristic;
-        };
+          return characteristic
+        }
       }
-    });
+    })
   }
 }

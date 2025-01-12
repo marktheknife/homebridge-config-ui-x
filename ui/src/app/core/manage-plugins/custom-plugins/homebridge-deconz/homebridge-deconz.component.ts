@@ -1,31 +1,31 @@
-import { Component } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
-import { saveAs } from 'file-saver';
-import { ToastrService } from 'ngx-toastr';
-import { ApiService } from '@/app/core/api.service';
+import { Component, inject } from '@angular/core'
+import { TranslateService } from '@ngx-translate/core'
+import { saveAs } from 'file-saver'
+import { ToastrService } from 'ngx-toastr'
+
+import { ApiService } from '@/app/core/api.service'
 
 @Component({
   selector: 'app-homebridge-deconz',
   templateUrl: './homebridge-deconz.component.html',
-  styleUrls: ['./homebridge-deconz.component.scss'],
+  standalone: true,
 })
 export class HomebridgeDeconzComponent {
+  private $api = inject(ApiService)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
 
-  constructor(
-    private translate: TranslateService,
-    public $toastr: ToastrService,
-    private $api: ApiService,
-  ) {}
+  constructor() {}
 
   downloadDumpFile() {
-    this.$api.get('/plugins/custom-plugins/homebridge-deconz/dump-file', { observe: 'response', responseType: 'blob' })
-      .subscribe(
-        (res) => {
-          saveAs(res.body, 'homebridge-deconz.json.gz');
-        },
-        () => {
-          this.$toastr.error('Homebridge deCONZ dump file does not exist yet.', this.translate.instant('toast.title_error'));
-        },
-      );
+    this.$api.get('/plugins/custom-plugins/homebridge-deconz/dump-file', { observe: 'response', responseType: 'blob' }).subscribe({
+      next: (res) => {
+        saveAs(res.body, 'homebridge-deconz.json.gz')
+      },
+      error: (error) => {
+        console.error(error)
+        this.$toastr.error(this.$translate.instant('plugins.settings.deconz.dump_no_exist'), this.$translate.instant('toast.title_error'))
+      },
+    })
   }
 }

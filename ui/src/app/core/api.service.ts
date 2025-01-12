@@ -1,31 +1,34 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { environment } from '@/environments/environment';
+import { HttpClient } from '@angular/common/http'
+import { inject, Injectable } from '@angular/core'
+import { Observable } from 'rxjs'
+
+import { environment } from '@/environments/environment'
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
-  constructor(private $http: HttpClient) {}
+  private $http = inject(HttpClient)
+
+  constructor() {}
 
   get(url: string, options?): Observable<any> {
-    return this.$http.get(`${environment.api.base}${url}`, options);
+    return this.$http.get(`${environment.api.base}${url}`, options)
   }
 
   post(url: string, body: any | null, options?): Observable<any> {
-    return this.$http.post(`${environment.api.base}${url}`, body, options);
+    return this.$http.post(`${environment.api.base}${url}`, body, options)
   }
 
   put(url: string, body: any | null, options?): Observable<any> {
-    return this.$http.put(`${environment.api.base}${url}`, body, options);
+    return this.$http.put(`${environment.api.base}${url}`, body, options)
   }
 
   patch(url: string, body: any | null, options?): Observable<any> {
-    return this.$http.patch(`${environment.api.base}${url}`, body, options);
+    return this.$http.patch(`${environment.api.base}${url}`, body, options)
   }
 
   delete(url: string, options?): Observable<any> {
-    return this.$http.delete(`${environment.api.base}${url}`, options);
+    return this.$http.delete(`${environment.api.base}${url}`, options)
   }
 }

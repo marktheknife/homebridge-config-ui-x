@@ -1,51 +1,59 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
+import { Component, inject, Input, OnInit } from '@angular/core'
+import { FormsModule } from '@angular/forms'
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
+import { NouisliderComponent } from 'ng2-nouislider'
+import { Subject } from 'rxjs'
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
 
 @Component({
   selector: 'app-lightbulb-manage',
   templateUrl: './lightbulb.manage.component.html',
-  styleUrls: ['./lightbulb.component.scss'],
+  standalone: true,
+  imports: [
+    FormsModule,
+    NouisliderComponent,
+    TranslatePipe,
+  ],
 })
 export class LightbulbManageComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
-  public targetMode: any;
-  public targetBrightness: any;
-  public targetBrightnessChanged: Subject<string> = new Subject<string>();
+  $activeModal = inject(NgbActiveModal)
 
-  constructor(
-    public activeModal: NgbActiveModal,
-  ) {
+  @Input() public service: ServiceTypeX
+  public targetMode: any
+  public targetBrightness: any
+  public targetBrightnessChanged: Subject<string> = new Subject<string>()
+
+  constructor() {
     this.targetBrightnessChanged
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
       )
       .subscribe(() => {
-        this.service.getCharacteristic('Brightness').setValue(this.targetBrightness.value);
+        this.service.getCharacteristic('Brightness').setValue(this.targetBrightness.value)
 
-        // turn bulb on or off when brightness is adjusted
+        // Turn bulb on or off when brightness is adjusted
         if (this.targetBrightness.value && !this.service.values.On) {
-          this.targetMode = true;
-          this.service.getCharacteristic('On').setValue(this.targetMode);
+          this.targetMode = true
+          this.service.getCharacteristic('On').setValue(this.targetMode)
         } else if (!this.targetBrightness.value && this.service.values.On) {
-          this.targetMode = false;
-          this.service.getCharacteristic('On').setValue(this.targetMode);
+          this.targetMode = false
+          this.service.getCharacteristic('On').setValue(this.targetMode)
         }
-
-      });
+      })
   }
 
   ngOnInit() {
-    this.targetMode = this.service.values.On;
+    this.targetMode = this.service.values.On
 
-    this.loadTargetBrightness();
+    this.loadTargetBrightness()
   }
 
   loadTargetBrightness() {
-    const TargetBrightness = this.service.getCharacteristic('Brightness');
+    const TargetBrightness = this.service.getCharacteristic('Brightness')
 
     if (TargetBrightness) {
       this.targetBrightness = {
@@ -53,20 +61,21 @@ export class LightbulbManageComponent implements OnInit {
         min: TargetBrightness.minValue,
         max: TargetBrightness.maxValue,
         step: TargetBrightness.minStep,
-      };
+      }
     }
   }
 
-  onTargetStateChange() {
-    this.service.getCharacteristic('On').setValue(this.targetMode);
+  setTargetMode(value: boolean) {
+    this.targetMode = value
+    this.service.getCharacteristic('On').setValue(this.targetMode)
 
-    // set the brightness to 100% if on 0% when turned on
+    // Set the brightness to 100% if on 0% when turned on
     if (this.targetMode && this.targetBrightness && !this.targetBrightness.value) {
-      this.targetBrightness.value = 100;
+      this.targetBrightness.value = 100
     }
   }
 
   onBrightnessStateChange() {
-    this.targetBrightnessChanged.next(this.targetBrightness.value);
+    this.targetBrightnessChanged.next(this.targetBrightness.value)
   }
 }

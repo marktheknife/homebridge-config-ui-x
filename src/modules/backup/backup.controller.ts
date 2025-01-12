@@ -1,5 +1,9 @@
+import type { StreamableFile } from '@nestjs/common'
+import type { FastifyRequest } from 'fastify'
+
 import {
   Controller,
+  Delete,
   Get,
   InternalServerErrorException,
   Param,
@@ -7,10 +11,9 @@ import {
   Put,
   Req,
   Res,
-  StreamableFile,
   UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+} from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import {
   ApiBearerAuth,
   ApiBody,
@@ -18,33 +21,32 @@ import {
   ApiOperation,
   ApiParam,
   ApiTags,
-} from '@nestjs/swagger';
-import { FastifyRequest } from 'fastify';
-import { AdminGuard } from '../../core/auth/guards/admin.guard';
-import { Logger } from '../../core/logger/logger.service';
-import { BackupService } from './backup.service';
+} from '@nestjs/swagger'
+
+import { AdminGuard } from '../../core/auth/guards/admin.guard'
+import { Logger } from '../../core/logger/logger.service'
+import { BackupService } from './backup.service'
 
 @ApiTags('Backup & Restore')
 @ApiBearerAuth()
 @UseGuards(AuthGuard())
 @Controller('backup')
 export class BackupController {
-
   constructor(
     private backupService: BackupService,
     private logger: Logger,
   ) {}
 
   @UseGuards(AdminGuard)
-  @ApiOperation({ summary: 'Download a .tar.gz of the Homebridge instance.' })
+  @ApiOperation({ summary: 'Download a `.tar.gz` of the Homebridge instance.' })
   @Get('/download')
   async downloadBackup(@Res({ passthrough: true }) res): Promise<StreamableFile> {
     try {
-      return await this.backupService.downloadBackup(res);
+      return await this.backupService.downloadBackup(res)
     } catch (e) {
-      console.error(e);
-      this.logger.error('Backup Failed ' + e);
-      throw new InternalServerErrorException(e.message);
+      console.error(e)
+      this.logger.error(`Backup Failed ${e}`)
+      throw new InternalServerErrorException(e.message)
     }
   }
 
@@ -52,14 +54,14 @@ export class BackupController {
   @ApiOperation({ summary: 'Return the date and time of the next scheduled backup.' })
   @Get('/scheduled-backups/next')
   async getNextBackupTime() {
-    return this.backupService.getNextBackupTime();
+    return this.backupService.getNextBackupTime()
   }
 
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'List available system generated instance backups.' })
   @Get('/scheduled-backups')
   async listScheduledBackups() {
-    return this.backupService.listScheduledBackups();
+    return this.backupService.listScheduledBackups()
   }
 
   @UseGuards(AdminGuard)
@@ -67,13 +69,32 @@ export class BackupController {
   @ApiParam({ name: 'backupId', type: 'string' })
   @Get('/scheduled-backups/:backupId')
   async getScheduledBackup(@Param('backupId') backupId): Promise<StreamableFile> {
-    return this.backupService.getScheduledBackup(backupId);
+    return this.backupService.getScheduledBackup(backupId)
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Delete a system generated instance backup.' })
+  @ApiParam({ name: 'backupId', type: 'string' })
+  @Delete('/scheduled-backups/:backupId')
+  async deleteScheduledBackup(@Param('backupId') backupId): Promise<void> {
+    await this.backupService.deleteScheduledBackup(backupId)
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiOperation({
+    summary: 'Extract a system generated instance backup into the restore directory.',
+    description: 'NOTE: This endpoint does not trigger the restore process.',
+  })
+  @ApiParam({ name: 'backupId', type: 'string' })
+  @Post('/scheduled-backups/:backupId/restore')
+  async restoreScheduledBackup(@Param('backupId') backupId): Promise<void> {
+    return this.backupService.restoreScheduledBackup(backupId)
   }
 
   @UseGuards(AdminGuard)
   @Post('/restore')
   @ApiOperation({
-    summary: 'Upload a .tar.gz of the Homebridge instance.',
+    summary: 'Upload a `.tar.gz` of the Homebridge instance.',
     description: 'NOTE: This endpoint does not trigger the restore process.',
   })
   @ApiConsumes('multipart/form-data')
@@ -90,11 +111,15 @@ export class BackupController {
   })
   async restoreBackup(@Req() req: FastifyRequest) {
     try {
-      const data = await req.file();
-      await this.backupService.uploadBackupRestore(data);
+      const data = await req.file()
+      if (data.file.truncated) {
+        throw new InternalServerErrorException(`Restore file exceeds maximum size ${globalThis.backup.maxBackupSizeText}.`)
+      } else {
+        await this.backupService.uploadBackupRestore(data)
+      }
     } catch (err) {
-      this.logger.error('Restore backup failed:', err.message);
-      throw new InternalServerErrorException(err.message);
+      this.logger.error(`Restore backup failed as ${err.message}`)
+      throw new InternalServerErrorException(err.message)
     }
   }
 
@@ -102,19 +127,15 @@ export class BackupController {
   @Put('/restore/trigger')
   @ApiOperation({
     summary: 'Triggers a headless restore process from the last uploaded backup file.',
-    description: 'Logs to stdout / stderr.',
+    description: 'Logs to `stdout`/`stderr`.',
   })
   async restoreBackupTrigger() {
-    try {
-      return await this.backupService.triggerHeadlessRestore();
-    } catch (err) {
-      throw err;
-    }
+    return await this.backupService.triggerHeadlessRestore()
   }
 
   @UseGuards(AdminGuard)
   @ApiOperation({
-    summary: 'Upload a .hbfx backup file created by third party apps.',
+    summary: 'Upload a `.hbfx` backup file created by third party apps.',
     description: 'NOTE: This endpoint does not trigger the restore process.',
   })
   @ApiConsumes('multipart/form-data')
@@ -132,11 +153,11 @@ export class BackupController {
   @Post('/restore/hbfx')
   async restoreHbfx(@Req() req: FastifyRequest) {
     try {
-      const data = await req.file();
-      await this.backupService.uploadHbfxRestore(data);
+      const data = await req.file()
+      await this.backupService.uploadHbfxRestore(data)
     } catch (err) {
-      this.logger.error('Restore backup failed:', err.message);
-      throw new InternalServerErrorException(err.message);
+      this.logger.error(`Restore backup failed as ${err.message}`)
+      throw new InternalServerErrorException(err.message)
     }
   }
 
@@ -144,6 +165,6 @@ export class BackupController {
   @Put('/restart')
   @ApiOperation({ summary: 'Trigger a hard restart of Homebridge (use after restoring backup).' })
   postBackupRestoreRestart() {
-    return this.backupService.postBackupRestoreRestart();
+    return this.backupService.postBackupRestoreRestart()
   }
 }

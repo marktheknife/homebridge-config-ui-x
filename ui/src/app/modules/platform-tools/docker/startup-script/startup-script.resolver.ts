@@ -1,22 +1,27 @@
-import { Injectable } from '@angular/core';
-import { Resolve, Router } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
-import { ApiService } from '@/app/core/api.service';
+import { inject, Injectable } from '@angular/core'
+import { Resolve, Router } from '@angular/router'
+import { TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { firstValueFrom } from 'rxjs'
+
+import { ApiService } from '@/app/core/api.service'
 
 @Injectable()
 export class StartupScriptResolver implements Resolve<any> {
-  constructor(
-    private $api: ApiService,
-    private $toastr: ToastrService,
-    private $router: Router,
-  ) {}
+  private $api = inject(ApiService)
+  private $router = inject(Router)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
+
+  constructor() {}
 
   async resolve() {
     try {
-      return await this.$api.get('/platform-tools/docker/startup-script').toPromise();
-    } catch (err) {
-      this.$toastr.error(err.message, 'Failed to Load Startup Script');
-      this.$router.navigate(['/']);
+      return await firstValueFrom(this.$api.get('/platform-tools/docker/startup-script'))
+    } catch (error) {
+      console.error(error)
+      this.$toastr.error(error.message, this.$translate.instant('toast.title_error'))
+      this.$router.navigate(['/'])
     }
   }
 }

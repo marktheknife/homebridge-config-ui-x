@@ -1,26 +1,26 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Subject } from 'rxjs';
-import { Socket, io as ioFn } from 'socket.io-client';
-import { AuthService } from '@/app/core/auth/auth.service';
-import { environment } from '@/environments/environment';
+import { inject, Injectable } from '@angular/core'
+import { Observable, Subject } from 'rxjs'
+import { io as ioFn, Socket } from 'socket.io-client'
+
+import { AuthService } from '@/app/core/auth/auth.service'
+import { environment } from '@/environments/environment'
 
 export interface IoNamespace {
-  connected?: Subject<any>;
-  socket: Socket;
-  request: (resource: string, payload?: string | Record<string, any> | Array<any>) => Observable<any>;
-  end?: () => void;
+  connected?: Subject<any>
+  socket: Socket
+  request: (resource: string, payload?: string | Record<string, any> | Array<any>) => Observable<any>
+  end?: () => void
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class WsService {
-  private namespaceConnectionCache = {};
+  private $auth = inject(AuthService)
 
-  constructor(
-    private $auth: AuthService,
-  ) {}
+  private namespaceConnectionCache = {}
+
+  constructor() {}
 
   /**
    * Wrapper function to reuse the same connecting
@@ -30,54 +30,54 @@ export class WsService {
   public connectToNamespace(namespace: string): IoNamespace {
     if (this.namespaceConnectionCache[namespace]) {
       /* connection to namespace already exists */
-      const io: IoNamespace = this.namespaceConnectionCache[namespace];
-      io.connected = new Subject();
+      const io: IoNamespace = this.namespaceConnectionCache[namespace]
+      io.connected = new Subject()
 
-      // broadcast to subscribers that the connection is ready
+      // Broadcast to subscribers that the connection is ready
       setTimeout(() => {
         if (io.socket.connected) {
-          io.connected.next(undefined);
+          io.connected.next(undefined)
         }
-      });
+      })
 
-      // watch for re-connections, and broadcast
+      // Watch for re-connections, and broadcast
       io.socket.on('connect', () => {
-        io.connected.next(undefined);
-      });
+        io.connected.next(undefined)
+      })
 
-      // define end function
+      // Define end function
       io.end = () => {
-        io.socket.emit('end');
-        io.socket.removeAllListeners();
-        io.connected.complete();
-      };
+        io.socket.emit('end')
+        io.socket.removeAllListeners()
+        io.connected.complete()
+      }
 
-      return this.namespaceConnectionCache[namespace];
+      return this.namespaceConnectionCache[namespace]
     } else {
       /* first time connecting to namespace */
-      const io = this.establishConnectionToNamespace(namespace);
-      io.connected = new Subject();
+      const io = this.establishConnectionToNamespace(namespace)
+      io.connected = new Subject()
 
-      // wait for the connection and broadcast when ready
+      // Wait for the connection and broadcast when ready
       io.socket.on('connect', () => {
-        io.connected.next(undefined);
-      });
+        io.connected.next(undefined)
+      })
 
-      // define end function
+      // Define end function
       io.end = () => {
-        io.socket.emit('end');
-        io.socket.removeAllListeners();
-        io.connected.complete();
-      };
+        io.socket.emit('end')
+        io.socket.removeAllListeners()
+        io.connected.complete()
+      }
 
-      // cache the connection
-      this.namespaceConnectionCache[namespace] = io;
-      return io;
+      // Cache the connection
+      this.namespaceConnectionCache[namespace] = io
+      return io
     }
   }
 
   public getExistingNamespace(namespace: string): IoNamespace {
-    return this.namespaceConnectionCache[namespace];
+    return this.namespaceConnectionCache[namespace]
   }
 
   /**
@@ -90,22 +90,22 @@ export class WsService {
       query: {
         token: this.$auth.token,
       },
-    });
+    })
 
-    const request = (resource: string, payload): Observable<any> => new Observable((observer) => {
-      socket.emit(resource, payload, (resp) => {
+    const request = (resource: string, payload: any): Observable<any> => new Observable((observer) => {
+      socket.emit(resource, payload, (resp: any) => {
         if (typeof resp === 'object' && resp.error) {
-          observer.error(resp);
+          observer.error(resp)
         } else {
-          observer.next(resp);
+          observer.next(resp)
         }
-        observer.complete();
-      });
-    });
+        observer.complete()
+      })
+    })
 
     return {
       socket,
       request,
-    };
+    }
   }
 }

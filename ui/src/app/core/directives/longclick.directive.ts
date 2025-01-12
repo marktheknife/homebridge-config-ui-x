@@ -1,72 +1,67 @@
-import {
-  Directive,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnDestroy,
-  Output,
-} from '@angular/core';
+/* global NodeJS */
+import { Directive, HostListener, Input, OnDestroy, output } from '@angular/core'
 
 @Directive({
   selector: '[appLongclick]',
+  standalone: true,
 })
 export class LongClickDirective implements OnDestroy {
-  @Input() public duration = 350;
-  @Output() public longclick: EventEmitter<MouseEvent> = new EventEmitter();
-  @Output() public shortclick: EventEmitter<MouseEvent | KeyboardEvent> = new EventEmitter();
+  @Input() public duration = 350
+  public readonly longclick = output<MouseEvent>()
+  public readonly shortclick = output<MouseEvent | KeyboardEvent>()
 
-  private downTimeout;
-  private done = false;
+  private downTimeout: NodeJS.Timeout
+  private done = false
 
   constructor() {}
 
   @HostListener('keyup.enter', ['$event'])
   public onEnter(event: KeyboardEvent) {
-    this.shortclick.emit(event);
+    this.shortclick.emit(event)
   }
 
   @HostListener('mouseup', ['$event'])
   public onMouseUp(event: MouseEvent): void {
-    clearInterval(this.downTimeout);
+    clearInterval(this.downTimeout)
     if (!this.done) {
-      this.done = true;
-      this.shortclick.emit(event);
+      this.done = true
+      this.shortclick.emit(event)
     }
   }
 
   @HostListener('touchend', ['$event'])
   public onTouchEnd(event: MouseEvent): void {
-    clearInterval(this.downTimeout);
-    event.preventDefault();
-    event.stopPropagation();
+    clearInterval(this.downTimeout)
+    event.preventDefault()
+    event.stopPropagation()
     if (!this.done) {
-      this.done = true;
-      this.shortclick.emit(event);
+      this.done = true
+      this.shortclick.emit(event)
     }
   }
 
   @HostListener('touchstart', ['$event'])
   @HostListener('mousedown', ['$event'])
   public onMouseDown(event: MouseEvent): void {
-    // eslint-disable-next-line import/no-deprecated
-    if (event.which > 1) {
-      return;
+    // Check for the left mouse button (button 0)
+    if (event.button !== 0) {
+      return
     }
-    this.done = false;
+    this.done = false
     this.downTimeout = setTimeout(() => {
-      this.done = true;
-      this.longclick.emit(event);
-    }, this.duration);
+      this.done = true
+      this.longclick.emit(event)
+    }, this.duration)
   }
 
   @HostListener('mousemove', ['$event'])
   @HostListener('touchmove', ['$event'])
   public onMouseMove(): void {
-    this.done = true;
-    clearInterval(this.downTimeout);
+    this.done = true
+    clearInterval(this.downTimeout)
   }
 
   ngOnDestroy() {
-    clearInterval(this.downTimeout);
+    clearInterval(this.downTimeout)
   }
 }

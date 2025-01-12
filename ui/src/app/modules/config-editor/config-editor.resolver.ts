@@ -1,23 +1,28 @@
-import { Injectable } from '@angular/core';
-import { Resolve, Router } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
-import { ApiService } from '@/app/core/api.service';
+import { inject, Injectable } from '@angular/core'
+import { Resolve, Router } from '@angular/router'
+import { TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { firstValueFrom } from 'rxjs'
+
+import { ApiService } from '@/app/core/api.service'
 
 @Injectable()
 export class ConfigEditorResolver implements Resolve<any> {
-  constructor(
-    private $api: ApiService,
-    private $toastr: ToastrService,
-    private $router: Router,
-  ) {}
+  private $api = inject(ApiService)
+  private $router = inject(Router)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
+
+  constructor() {}
 
   async resolve() {
     try {
-      const json = await this.$api.get('/config-editor').toPromise();
-      return JSON.stringify(json, null, 4);
-    } catch (err) {
-      this.$toastr.error(err.message, 'Failed to Load Config');
-      this.$router.navigate(['/']);
+      const json = await firstValueFrom(this.$api.get('/config-editor'))
+      return JSON.stringify(json, null, 4)
+    } catch (error) {
+      console.error(error)
+      this.$toastr.error(error.message, this.$translate.instant('toast.title_error'))
+      this.$router.navigate(['/'])
     }
   }
 }

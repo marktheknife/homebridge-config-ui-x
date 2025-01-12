@@ -1,24 +1,27 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, inject, Input } from '@angular/core'
+import { FormsModule } from '@angular/forms'
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
 
 @Component({
-  selector: 'app-select-network-interfaces',
   templateUrl: './select-network-interfaces.component.html',
-  styleUrls: ['./select-network-interfaces.component.scss'],
+  standalone: true,
+  imports: [
+    FormsModule,
+    TranslatePipe,
+  ],
 })
-export class SelectNetworkInterfacesComponent implements OnInit {
-  @Input() availableNetworkAdapters: Record<string, any>;
-  @Input() bridgeNetworkAdapters: Record<string, any>;
+export class SelectNetworkInterfacesComponent {
+  $activeModal = inject(NgbActiveModal)
 
-  constructor(
-    public activeModal: NgbActiveModal,
-  ) {}
+  @Input() availableNetworkAdapters: any[] = []
+  @Input() bridgeNetworkAdapters: string[] = []
 
-  ngOnInit(): void {}
+  constructor() {}
 
   submit() {
-    this.activeModal.close(
-      this.availableNetworkAdapters.filter((x) => x.selected).map((x) => x.iface),
-    );
+    this.$activeModal.close(
+      this.availableNetworkAdapters.filter((x: any) => x.selected).map((x: any) => x.iface),
+    )
   }
 }

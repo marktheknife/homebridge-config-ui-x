@@ -1,31 +1,31 @@
-import { Component } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
-import { saveAs } from 'file-saver';
-import { ToastrService } from 'ngx-toastr';
-import { ApiService } from '@/app/core/api.service';
+import { Component, inject } from '@angular/core'
+import { TranslateService } from '@ngx-translate/core'
+import { saveAs } from 'file-saver'
+import { ToastrService } from 'ngx-toastr'
+
+import { ApiService } from '@/app/core/api.service'
 
 @Component({
   selector: 'app-homebridge-hue',
   templateUrl: './homebridge-hue.component.html',
-  styleUrls: ['./homebridge-hue.component.scss'],
+  standalone: true,
 })
 export class HomebridgeHueComponent {
+  private $api = inject(ApiService)
+  private $translate = inject(TranslateService)
+  private $toastr = inject(ToastrService)
 
-  constructor(
-    private translate: TranslateService,
-    public $toastr: ToastrService,
-    private $api: ApiService,
-  ) {}
+  constructor() {}
 
   downloadDumpFile() {
-    this.$api.get('/plugins/custom-plugins/homebridge-hue/dump-file', { observe: 'response', responseType: 'blob' })
-      .subscribe(
-        (res) => {
-          saveAs(res.body, 'homebridge-hue.json.gz');
-        },
-        () => {
-          this.$toastr.error('Homebridge Hue dump file does not exist yet.', this.translate.instant('toast.title_error'));
-        },
-      );
+    this.$api.get('/plugins/custom-plugins/homebridge-hue/dump-file', { observe: 'response', responseType: 'blob' }).subscribe({
+      next: (res) => {
+        saveAs(res.body, 'homebridge-hue.json.gz')
+      },
+      error: (error) => {
+        console.error(error)
+        this.$toastr.error(this.$translate.instant('plugins.settings.hue.dump_no_exist'), this.$translate.instant('toast.title_error'))
+      },
+    })
   }
 }

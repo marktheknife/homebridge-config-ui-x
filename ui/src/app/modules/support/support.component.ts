@@ -1,15 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { SettingsService } from '@/app/core/settings.service';
+import { NgClass } from '@angular/common'
+import { Component } from '@angular/core'
+import { TranslatePipe } from '@ngx-translate/core'
 
 @Component({
-  selector: 'app-support',
   templateUrl: './support.component.html',
-  styleUrls: ['./support.component.scss'],
+  standalone: true,
+  imports: [
+    NgClass,
+    TranslatePipe,
+  ],
 })
-export class SupportComponent implements OnInit {
-  constructor(
-    public $settings: SettingsService,
-  ) {}
+export class SupportComponent {
+  public showFields = {
+    general: true,
+    dev: true,
+  }
 
-  ngOnInit(): void {}
+  constructor() {}
+
+  toggleSection(section: string) {
+    this.showFields[section] = !this.showFields[section]
+  }
 }

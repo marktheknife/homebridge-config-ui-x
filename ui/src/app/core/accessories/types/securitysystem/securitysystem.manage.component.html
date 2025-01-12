@@ -1,28 +1,55 @@
 <div class="modal-content">
   <div class="modal-header">
     <h5 class="modal-title" [innerText]="service.customName || service.serviceName"></h5>
-    <button type="button" class="close" data-dismiss="modal" [attr.aria-label]="'form.button_close' | translate"
-      (click)="activeModal.dismiss('Dismiss')">
+    <button
+      type="button"
+      class="close"
+      data-dismiss="modal"
+      [attr.aria-label]="'form.button_close' | translate"
+      (click)="$activeModal.dismiss('Dismiss')"
+    >
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
   <div class="modal-body text-center">
-
-    <div class="securitysystem-mode-control btn-group-vertical btn-group-toggle d-flex justify-content-center mb-4"
-      ngbRadioGroup name="radioBasic" [(ngModel)]="targetMode" (change)="onTargetStateChange()">
-      <label ngbButtonLabel class="btn-primary m-0">
-        <input ngbButton type="radio" [value]="0"> {{ 'accessories.control.label_home' | translate }}
-      </label>
-      <label ngbButtonLabel class="btn-primary  m-0">
-        <input ngbButton type="radio" [value]="1"> {{ 'accessories.control.label_away' | translate }}
-      </label>
-      <label ngbButtonLabel class="btn-primary  m-0">
-        <input ngbButton type="radio" [value]="2"> {{ 'accessories.control.label_night' | translate }}
-      </label>
-      <label ngbButtonLabel class="btn-primary  m-0">
-        <input ngbButton type="radio" [value]="3"> {{ 'accessories.control.label_off' | translate }}
-      </label>
+    <div
+      class="btn-group-vertical d-flex justify-content-center mb-4 p-0"
+      role="group"
+      aria-label="Security System Mode Control"
+    >
+      <button
+        type="button"
+        class="btn btn-primary mb-0 mx-0 px-0 py-2"
+        (click)="setTargetMode(0)"
+        [style.opacity]="targetMode === 0 ? '1' : '0.75'"
+      >
+        {{ 'accessories.control.home' | translate }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary mb-0 mx-0 px-0 py-2"
+        (click)="setTargetMode(1)"
+        [style.opacity]="targetMode === 1 ? '1' : '0.75'"
+      >
+        {{ 'accessories.control.away' | translate }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary mb-0 mx-0 px-0 py-2"
+        (click)="setTargetMode(2)"
+        [style.opacity]="targetMode === 2 ? '1' : '0.75'"
+      >
+        {{ 'accessories.control.night' | translate }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary mb-0 mx-0 px-0 py-2"
+        (click)="setTargetMode(3)"
+        [style.opacity]="targetMode === 3 ? '1' : '0.75'"
+      >
+        {{ 'accessories.control.off' | translate }}
+      </button>
     </div>
-
   </div>
+  <div class="modal-footer"></div>
 </div>

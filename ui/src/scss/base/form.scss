@@ -11,10 +11,35 @@
   }
 }
 
-.expandable, .expanded {
-  legend, label {
+.expandable,
+.expanded {
+  legend,
+  label {
     &:before {
       font-family: 'Font Awesome 6 Free' !important;
     }
+  }
+}
+
+select,
+input {
+  font-size: 0.95rem !important;
+}
+
+.resp-select {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (min-width: 768px) {
+    width: 300px;
+  }
+}
+
+.resp-input {
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: 300px;
   }
 }

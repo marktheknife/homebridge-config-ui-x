@@ -1,25 +1,37 @@
-import { Component } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
-import { SettingsService } from '@/app/core/settings.service';
+import { Component, inject } from '@angular/core'
+import { Router, RouterOutlet } from '@angular/router'
+import { TranslateService } from '@ngx-translate/core'
+
+import { SettingsService } from '@/app/core/settings.service'
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
+  standalone: true,
+  imports: [RouterOutlet],
 })
 export class AppComponent {
-  constructor(
-    router: Router,
-    translate: TranslateService,
-    $settings: SettingsService,
-  ) {
-    console.log('Browser Culture Lang:', translate.getBrowserCultureLang());
-    console.log('Browser Lang:', translate.getBrowserLang());
+  private $router = inject(Router)
+  private $translate = inject(TranslateService)
+  private $settings = inject(SettingsService)
 
-    // this array needs to be updated each time a new translation is added
+  constructor() {
+    const $translate = this.$translate
+    const $settings = this.$settings
+
+    // Detect if the user has a dark mode preference
+    const colorSchemeQueryList = window.matchMedia('(prefers-color-scheme: dark)')
+    const setLightingMode = (event: MediaQueryList | MediaQueryListEvent) => {
+      $settings.setBrowserLightingMode(event.matches ? 'dark' : 'light')
+    }
+    setLightingMode(colorSchemeQueryList)
+    colorSchemeQueryList.addEventListener('change', setLightingMode)
+
+    // This array needs to be updated each time a new translation is added
     const languages = [
       'en',
       'de',
+      'fi',
       'fr',
       'pl',
       'cs',
@@ -45,38 +57,29 @@ export class AppComponent {
       'th',
       'uk',
       'he',
-    ];
+    ]
 
-    // which languages should use RTL
+    // Which languages should use RTL
     const rtlLanguages = [
       'he',
-    ];
+    ]
 
-    // watch for lang changes
-    translate.onLangChange.subscribe(() => {
-      $settings.rtl = rtlLanguages.includes(translate.currentLang);
-    });
+    // Watch for lang changes
+    $translate.onLangChange.subscribe(() => {
+      $settings.rtl = rtlLanguages.includes($translate.currentLang)
+    })
 
-    const browserLang = languages.find(x => x === translate.getBrowserLang() || x === translate.getBrowserCultureLang());
+    const browserLang = languages.find(x => x === $translate.getBrowserLang() || x === $translate.getBrowserCultureLang())
 
     for (const lang of languages) {
-      translate.setTranslation(lang, require('../i18n/' + lang + '.json'));
+      // eslint-disable-next-line ts/no-require-imports
+      $translate.setTranslation(lang, require(`../i18n/${lang}.json`))
     }
 
     if (browserLang) {
-      translate.use(browserLang);
+      $translate.use(browserLang)
     } else {
-      translate.setDefaultLang('en');
+      $translate.setDefaultLang('en')
     }
-
-    // ensure the menu closes when we navigate
-    router.events.subscribe((event) => {
-      if (event instanceof NavigationEnd) {
-        const dropdownMenu = window.document.querySelector('#navbarSupportedContent');
-        if (dropdownMenu) {
-          dropdownMenu.classList.remove('show');
-        }
-      }
-    });
   }
 }

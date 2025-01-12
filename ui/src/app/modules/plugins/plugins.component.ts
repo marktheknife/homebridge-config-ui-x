@@ -1,194 +1,241 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { NavigationEnd, Router } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
-import { ToastrService } from 'ngx-toastr';
-import { Subscription } from 'rxjs';
-import { ApiService } from '@/app/core/api.service';
-import { SettingsService } from '@/app/core/settings.service';
-import { IoNamespace, WsService } from '@/app/core/ws.service';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core'
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms'
+import { NavigationEnd, Router } from '@angular/router'
+import { TranslatePipe, TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { firstValueFrom, Subscription } from 'rxjs'
+
+import { ApiService } from '@/app/core/api.service'
+import { SpinnerComponent } from '@/app/core/components/spinner/spinner.component'
+import { ManagePluginsService } from '@/app/core/manage-plugins/manage-plugins.service'
+import { SettingsService } from '@/app/core/settings.service'
+import { IoNamespace, WsService } from '@/app/core/ws.service'
+import { PluginCardComponent } from '@/app/modules/plugins/plugin-card/plugin-card.component'
 
 @Component({
-  selector: 'app-plugins',
   templateUrl: './plugins.component.html',
   styleUrls: ['./plugins.component.scss'],
+  standalone: true,
+  imports: [
+    SpinnerComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    PluginCardComponent,
+    TranslatePipe,
+  ],
 })
 export class PluginsComponent implements OnInit, OnDestroy {
-  public loading = true;
-  public installedPlugins: any = [];
-  public childBridges = [];
+  private $api = inject(ApiService)
+  private $plugin = inject(ManagePluginsService)
+  private $router = inject(Router)
+  private $settings = inject(SettingsService)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
+  private $ws = inject(WsService)
+
+  public loading = true
+  public installedPlugins: any = []
+  public childBridges = []
+  public showExitButton = false
   public form = new FormGroup({
     query: new FormControl('', [Validators.required]),
-  });
+  })
 
-  private io: IoNamespace;
-  private navigationSubscription: Subscription;
+  private io: IoNamespace
+  private navigationSubscription: Subscription
 
-  constructor(
-    private $api: ApiService,
-    private $ws: WsService,
-    private $router: Router,
-    private $settings: SettingsService,
-    private $toastr: ToastrService,
-    private $translate: TranslateService,
-  ) {}
+  constructor() {}
 
   async ngOnInit() {
-    this.io = this.$ws.connectToNamespace('child-bridges');
+    this.io = this.$ws.connectToNamespace('child-bridges')
     this.io.connected.subscribe(async () => {
-      this.getChildBridgeMetadata();
-      this.io.socket.emit('monitor-child-bridge-status');
+      this.getChildBridgeMetadata()
+      this.io.socket.emit('monitor-child-bridge-status')
 
-      // load list of installed plugins
-      await this.loadInstalledPlugins();
-    });
+      // Load list of installed plugins
+      await this.loadInstalledPlugins()
+
+      // Get query parameters
+      const justInstalled = this.$router.parseUrl(this.$router.url).queryParams.installed
+      if (justInstalled) {
+        const plugin = this.installedPlugins.find(x => x.name === justInstalled)
+        if (plugin && !plugin.isConfigured) {
+          this.$plugin.settings(plugin)
+        }
+        this.$router.navigate(['/plugins'])
+      }
+    })
 
     this.io.socket.on('child-bridge-status-update', (data) => {
-      const existingBridge = this.childBridges.find(x => x.username === data.username);
+      const existingBridge = this.childBridges.find(x => x.username === data.username)
       if (existingBridge) {
-        Object.assign(existingBridge, data);
+        Object.assign(existingBridge, data)
       } else {
-        this.childBridges.push(data);
+        this.childBridges.push(data)
       }
-    });
+    })
 
     this.navigationSubscription = this.$router.events.subscribe((e: any) => {
       // If it is a NavigationEnd event re-initialise the component
       if (e instanceof NavigationEnd) {
-        this.loadInstalledPlugins();
+        this.loadInstalledPlugins()
       }
-    });
+    })
   }
 
   async loadInstalledPlugins() {
-    this.form.setValue({ query: '' });
-
-    this.installedPlugins = [];
-    this.loading = true;
+    this.form.setValue({ query: '' })
+    this.showExitButton = false
+    this.installedPlugins = []
+    this.loading = true
 
     try {
-      const installedPlugins = await this.$api.get('/plugins').toPromise();
-      this.installedPlugins = installedPlugins.filter((x) => x.name !== 'homebridge-config-ui-x');
-      await this.appendMetaInfo();
+      const installedPlugins = await firstValueFrom(this.$api.get('/plugins'))
+      this.installedPlugins = installedPlugins.filter((x: any) => x.name !== 'homebridge-config-ui-x')
+      await this.appendMetaInfo()
 
       // The backend used to sort this only by plugins with updates first
       // I removed this sorting since now we want the frontend to do more of the work
       // We have more things that we want to bring to the top of the list
-      const sortedList =  this.installedPlugins.sort((a, b) => {
+      const sortedList = this.installedPlugins.sort((a, b) => {
         // Priority 1: updateAvailable (true first, sorted alphabetically by 'name')
         if (a.updateAvailable !== b.updateAvailable) {
-          return a.updateAvailable ? -1 : 1;
+          return a.updateAvailable ? -1 : 1
         }
 
-        // Priority 2: disabled (false first, sorted alphabetically by 'name')
+        // Priority 2: newHbScope (true first, sorted alphabetically by 'name')
+        if (a.newHbScope && !b.newHbScope) {
+          return -1
+        }
+
+        // Priority 3: disabled (false first, sorted alphabetically by 'name')
         if (a.disabled !== b.disabled) {
-          return a.disabled ? 1 : -1;
+          return a.disabled ? 1 : -1
         }
 
-        // Priority 3: isConfigured (false first, sorted alphabetically by 'name')
+        // Priority 4: isConfigured (false first, sorted alphabetically by 'name')
         if (a.isConfigured !== b.isConfigured) {
-          return a.isConfigured ? 1 : -1;
+          return a.isConfigured ? 1 : -1
         }
 
-        // Priority 4: hasChildBridgesUnpaired (true first, sorted alphabetically by 'name')
+        // Priority 5: hasChildBridgesUnpaired (true first, sorted alphabetically by 'name')
         if (a.hasChildBridgesUnpaired !== b.hasChildBridgesUnpaired) {
-          return a.hasChildBridgesUnpaired ? -1 : 1;
+          return a.hasChildBridgesUnpaired ? -1 : 1
         }
 
-        // Priority 5: hasChildBridges (false first, sorted alphabetically by 'name', only when recommendChildBridges is true)
+        // Priority 6: hasChildBridges (false first, sorted alphabetically by 'name', only when recommendChildBridges is true)
         if (a.hasChildBridges !== b.hasChildBridges && this.$settings.env.recommendChildBridges) {
-          return a.hasChildBridges ? 1 : -1;
+          return a.hasChildBridges ? 1 : -1
         }
 
         // If all criteria are equal, sort alphabetically by 'name'
-        return a.name.localeCompare(b.name);
-      });
+        return a.name.localeCompare(b.name)
+      })
 
-      this.loading = false;
-      return sortedList;
-    } catch (err) {
-      this.$toastr.error(
-        `${this.$translate.instant('plugins.toast_failed_to_load_plugins')}: ${err.message}`,
-        this.$translate.instant('toast.title_error'),
-      );
+      this.loading = false
+      return sortedList
+    } catch (error) {
+      console.error(error)
+      this.$toastr.error(this.$translate.instant('plugins.toast_failed_to_load_plugins'), this.$translate.instant('toast.title_error'))
     }
   }
 
   async appendMetaInfo() {
     // Also get the current configuration for each plugin
     await Promise.all(this.installedPlugins
-      .filter((plugin) => plugin.installedVersion)
-      .map(async (plugin) => {
+      .filter(plugin => plugin.installedVersion)
+      .map(async (plugin: any) => {
         try {
           // Adds some extra properties to the plugin object for the plugin card
-          const configBlocks = await this.$api.get(`/config-editor/plugin/${encodeURIComponent(plugin.name)}`).toPromise();
-          plugin.isConfigured = configBlocks.length > 0;
+          const configBlocks = await firstValueFrom(this.$api.get(`/config-editor/plugin/${encodeURIComponent(plugin.name)}`))
+          plugin.isConfigured = configBlocks.length > 0
+          plugin.isConfiguredDynamicPlatform = plugin.isConfigured && Object.prototype.hasOwnProperty.call(configBlocks[0], 'platform')
 
-          plugin.recommendChildBridge = plugin.isConfigured
-            && Object.prototype.hasOwnProperty.call(configBlocks[0], 'platform')
-            && this.$settings.env.recommendChildBridges
-            && this.$settings.env.serviceMode
-            && !['homebridge', 'homebridge-config-ui-x'].includes(plugin.name);
+          plugin.recommendChildBridge = plugin.isConfiguredDynamicPlatform
+          && this.$settings.env.recommendChildBridges
+          && this.$settings.env.serviceMode
+          && !['homebridge', 'homebridge-config-ui-x'].includes(plugin.name)
 
-          // eslint-disable-next-line no-underscore-dangle
-          plugin.hasChildBridges = plugin.isConfigured && configBlocks.some((x) => x._bridge && x._bridge.username);
+          plugin.hasChildBridges = plugin.isConfigured && configBlocks.some(x => x._bridge && x._bridge.username)
 
-          const pluginChildBridges = this.getPluginChildBridges(plugin);
-          plugin.hasChildBridgesUnpaired = pluginChildBridges.some((x) => !x.paired);
+          const pluginChildBridges = this.getPluginChildBridges(plugin)
+          plugin.hasChildBridgesUnpaired = pluginChildBridges.some(x => !x.paired)
         } catch (err) {
-          // may not be technically correct, but if we can't load the config, assume it is configured
-          plugin.isConfigured = true;
-          plugin.hasChildBridges = true;
+          // May not be technically correct, but if we can't load the config, assume it is configured
+          plugin.isConfigured = true
+          plugin.hasChildBridges = true
         }
       }),
-    );
+    )
   }
 
   search() {
-    this.installedPlugins = [];
-    this.loading = true;
+    this.installedPlugins = []
+    this.loading = true
+    this.showExitButton = true
 
-    this.$api.get(`/plugins/search/${encodeURIComponent(this.form.value.query)}`).subscribe(
-      (data) => {
-        this.installedPlugins = data.filter((x) => x.name !== 'homebridge-config-ui-x');
-        this.appendMetaInfo();
-        this.loading = false;
+    this.$api.get(`/plugins/search/${encodeURIComponent(this.form.value.query)}`).subscribe({
+      next: (data) => {
+        // Some filtering in regard to the changeover to scoped plugins
+        // A plugin may have two versions, like homebridge-foo and @homebridge-plugins/homebridge-foo
+        // If the user does not have either installed, or has the scoped version installed, then hide the unscoped version
+        // If the user has the unscoped version installed, but not the scoped version, then hide the scoped version
+        const hiddenPlugins = new Set<string>()
+        this.installedPlugins = data
+          .reduce((acc: any, x: any) => {
+            if (x.name === 'homebridge-config-ui-x' || hiddenPlugins.has(x.name)) {
+              return acc
+            }
+            if (x.newHbScope) {
+              const y = x.newHbScope.to
+              const yExists = data.some((plugin: any) => plugin.name === y)
+              if (x.installedVersion || !yExists) {
+                hiddenPlugins.add(y)
+                acc.push(x)
+              }
+            } else {
+              acc.push(x)
+            }
+            return acc
+          }, [])
+        this.appendMetaInfo()
+        this.loading = false
       },
-      (err) => {
-        this.loading = false;
-        this.$toastr.error(`${err.error.message || err.message}`, 'Error');
-        this.loadInstalledPlugins();
+      error: (error) => {
+        this.loading = false
+        console.error(error)
+        this.$toastr.error(error.error.message || error.message, this.$translate.instant('toast.title_error'))
+        this.loadInstalledPlugins()
       },
-    );
+    })
   }
 
   onClearSearch() {
-    this.form.setValue({ query: '' });
-    this.loadInstalledPlugins();
+    this.loadInstalledPlugins()
   }
 
   onSubmit({ value }) {
     if (!value.query.length) {
-      this.loadInstalledPlugins();
+      this.loadInstalledPlugins()
     } else {
-      this.search();
+      this.search()
     }
   }
 
   getChildBridgeMetadata() {
     this.io.request('get-homebridge-child-bridge-status').subscribe((data) => {
-      this.childBridges = data;
-    });
+      this.childBridges = data
+    })
   }
 
-  getPluginChildBridges(plugin) {
-    return this.childBridges.filter((x) => x.plugin === plugin.name);
+  getPluginChildBridges(plugin: any) {
+    return this.childBridges.filter(x => x.plugin === plugin.name)
   }
 
   ngOnDestroy() {
     if (this.navigationSubscription) {
-      this.navigationSubscription.unsubscribe();
+      this.navigationSubscription.unsubscribe()
     }
-    this.io.end();
+    this.io.end()
   }
 }

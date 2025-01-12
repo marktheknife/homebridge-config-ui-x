@@ -1,47 +1,43 @@
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { Subject } from 'rxjs';
-import { TerminalService } from '@/app/core/terminal.service';
+import { Component, ElementRef, HostListener, inject, OnDestroy, OnInit, viewChild } from '@angular/core'
+import { TranslatePipe } from '@ngx-translate/core'
+import { Subject } from 'rxjs'
+
+import { TerminalService } from '@/app/core/terminal.service'
 
 @Component({
-  selector: 'app-terminal',
   templateUrl: './terminal.component.html',
+  standalone: true,
+  imports: [TranslatePipe],
 })
 export class TerminalComponent implements OnInit, OnDestroy {
-  @ViewChild('terminaloutput', { static: true }) termTarget: ElementRef;
-  private resizeEvent = new Subject();
+  private $terminal = inject(TerminalService)
 
-  constructor(
-    private $terminal: TerminalService,
-  ) {}
+  readonly termTarget = viewChild<ElementRef>('terminaloutput')
+  private resizeEvent = new Subject()
+
+  constructor() {}
 
   @HostListener('window:resize', ['$event'])
   onWindowResize() {
-    this.resizeEvent.next(undefined);
+    this.resizeEvent.next(undefined)
   }
 
   ngOnInit() {
-    // set body bg color
-    window.document.querySelector('body').classList.add('bg-black');
+    // Set body bg color
+    window.document.querySelector('body').classList.add('bg-black')
 
-    // start the terminal
-    this.$terminal.startTerminal(this.termTarget, {}, this.resizeEvent);
+    // Start the terminal
+    this.$terminal.startTerminal(this.termTarget(), {}, this.resizeEvent)
 
-    // set focus to the terminal
-    this.$terminal.term.focus();
+    // Set focus to the terminal
+    this.$terminal.term.focus()
   }
 
   ngOnDestroy() {
-    // unset body bg color
-    window.document.querySelector('body').classList.remove('bg-black');
+    // Unset body bg color
+    window.document.querySelector('body').classList.remove('bg-black')
 
-    // destroy the terminal
-    this.$terminal.destroyTerminal();
+    // Destroy the terminal
+    this.$terminal.destroyTerminal()
   }
 }

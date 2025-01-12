@@ -1,14 +1,15 @@
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { JwtModule } from '@auth0/angular-jwt';
-import { TranslateModule } from '@ngx-translate/core';
-import { AdminGuard } from '@/app/core/auth/admin.guard';
-import { AuthGuard } from '@/app/core/auth/auth.guard';
-import { AuthService } from '@/app/core/auth/auth.service';
-import { environment } from '@/environments/environment';
+import { CommonModule } from '@angular/common'
+import { NgModule } from '@angular/core'
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'
+import { JwtModule } from '@auth0/angular-jwt'
+import { TranslateModule } from '@ngx-translate/core'
 
-const tokenGetter = () => localStorage.getItem(environment.jwt.tokenKey);
+import { AdminGuard } from '@/app/core/auth/admin.guard'
+import { AuthGuard } from '@/app/core/auth/auth.guard'
+import { AuthService } from '@/app/core/auth/auth.service'
+import { environment } from '@/environments/environment'
+
+const tokenGetter = () => localStorage.getItem(environment.jwt.tokenKey)
 
 @NgModule({
   imports: [
@@ -35,5 +36,5 @@ const tokenGetter = () => localStorage.getItem(environment.jwt.tokenKey);
 })
 class AuthModule {}
 
-// token getter
-export { AuthModule, tokenGetter };
+// Token getter
+export { AuthModule, tokenGetter }

@@ -8,8 +8,7 @@
 .no-scrollbars,
 .xterm-viewport {
   &::-webkit-scrollbar {
-    // chrome
-    display: none;
+    display: none; // chrome
   }
   scrollbar-width: none; // firefox
   -ms-overflow-style: none; // edge

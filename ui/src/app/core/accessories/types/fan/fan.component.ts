@@ -1,43 +1,52 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
-import { FanManageComponent } from '@/app/core/accessories/types/fan/fan.manage.component';
+import { NgClass } from '@angular/common'
+import { Component, inject, Input, OnInit } from '@angular/core'
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
+import { FanManageComponent } from '@/app/core/accessories/types/fan/fan.manage.component'
+import { LongClickDirective } from '@/app/core/directives/longclick.directive'
 
 @Component({
   selector: 'app-fan',
   templateUrl: './fan.component.html',
-  styleUrls: ['./fan.component.scss'],
+  standalone: true,
+  imports: [
+    LongClickDirective,
+    NgClass,
+    TranslatePipe,
+  ],
 })
 export class FanComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
-  public rotationSpeedUnit = '';
+  private $modal = inject(NgbModal)
 
-  constructor(
-    private modalService: NgbModal,
-  ) {}
+  @Input() public service: ServiceTypeX
+  public rotationSpeedUnit = ''
+
+  constructor() {}
 
   ngOnInit() {
     // Find the unit for the rotation speed
-    const RotationSpeed = this.service.serviceCharacteristics.find((c) => c.type === 'RotationSpeed');
+    const RotationSpeed = this.service.serviceCharacteristics.find(c => c.type === 'RotationSpeed')
     if (RotationSpeed && RotationSpeed.unit === 'percentage') {
-      this.rotationSpeedUnit = '%';
+      this.rotationSpeedUnit = '%'
     }
   }
 
   onClick() {
-    this.service.getCharacteristic('On').setValue(!this.service.values.On);
+    this.service.getCharacteristic('On').setValue(!this.service.values.On)
 
-    // set the rotation speed to max if on 0% when turned on
+    // Set the rotation speed to max if on 0% when turned on
     if (!this.service.values.On && 'RotationSpeed' in this.service.values && !this.service.values.RotationSpeed) {
-      const RotationSpeed = this.service.getCharacteristic('RotationSpeed');
-      RotationSpeed.setValue(RotationSpeed.maxValue);
+      const RotationSpeed = this.service.getCharacteristic('RotationSpeed')
+      RotationSpeed.setValue(RotationSpeed.maxValue)
     }
   }
 
   onLongClick() {
-    const ref = this.modalService.open(FanManageComponent, {
+    const ref = this.$modal.open(FanManageComponent, {
       size: 'md',
-    });
-    ref.componentInstance.service = this.service;
+    })
+    ref.componentInstance.service = this.service
   }
 }

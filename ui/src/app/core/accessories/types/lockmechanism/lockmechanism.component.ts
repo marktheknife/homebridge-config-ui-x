@@ -1,19 +1,28 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
+import { NgClass } from '@angular/common'
+import { Component, Input } from '@angular/core'
+import { TranslatePipe } from '@ngx-translate/core'
+import { InlineSVGModule } from 'ng-inline-svg-2'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
+import { LongClickDirective } from '@/app/core/directives/longclick.directive'
 
 @Component({
   selector: 'app-lockmechanism',
   templateUrl: './lockmechanism.component.html',
-  styleUrls: ['./lockmechanism.component.scss'],
+  standalone: true,
+  imports: [
+    LongClickDirective,
+    NgClass,
+    InlineSVGModule,
+    TranslatePipe,
+  ],
 })
-export class LockmechanismComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
+export class LockmechanismComponent {
+  @Input() public service: ServiceTypeX
 
   constructor() {}
 
-  ngOnInit() {}
-
   onClick() {
-    this.service.getCharacteristic('LockTargetState').setValue(this.service.values.LockTargetState ? 0 : 1);
+    this.service.getCharacteristic('LockTargetState').setValue(this.service.values.LockTargetState ? 0 : 1)
   }
 }

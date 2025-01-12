@@ -1,23 +1,33 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
+import { Component, inject, Input, OnInit } from '@angular/core'
+import { FormsModule } from '@angular/forms'
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
+import { NouisliderComponent } from 'ng2-nouislider'
+import { Subject } from 'rxjs'
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
 
 @Component({
   selector: 'app-door-manage',
   templateUrl: './door.manage.component.html',
   styleUrls: ['./door.component.scss'],
+  standalone: true,
+  imports: [
+    NouisliderComponent,
+    FormsModule,
+    TranslatePipe,
+  ],
 })
 export class DoorManageComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
-  public targetMode: any;
-  public targetPosition: any;
-  public targetPositionChanged: Subject<string> = new Subject<string>();
+  $activeModal = inject(NgbActiveModal)
 
-  constructor(
-    public activeModal: NgbActiveModal,
-  ) {
+  @Input() public service: ServiceTypeX
+  public targetMode: any
+  public targetPosition: any
+  public targetPositionChanged: Subject<string> = new Subject<string>()
+
+  constructor() {
     this.targetPositionChanged
       .pipe(
         debounceTime(300),
@@ -25,21 +35,21 @@ export class DoorManageComponent implements OnInit {
       )
       .subscribe(() => {
         if (this.service.getCharacteristic('CurrentPosition').value < this.targetPosition.value) {
-          this.service.values.PositionState = 1;
+          this.service.values.PositionState = 1
         } else if (this.service.getCharacteristic('CurrentPosition').value > this.targetPosition.value) {
-          this.service.values.PositionState = 0;
+          this.service.values.PositionState = 0
         }
-        this.service.getCharacteristic('TargetPosition').setValue(this.targetPosition.value);
-      });
+        this.service.getCharacteristic('TargetPosition').setValue(this.targetPosition.value)
+      })
   }
 
   ngOnInit() {
-    this.targetMode = this.service.values.On;
-    this.loadTargetPosition();
+    this.targetMode = this.service.values.On
+    this.loadTargetPosition()
   }
 
   loadTargetPosition() {
-    const TargetPosition = this.service.getCharacteristic('TargetPosition');
+    const TargetPosition = this.service.getCharacteristic('TargetPosition')
 
     if (TargetPosition) {
       this.targetPosition = {
@@ -47,11 +57,11 @@ export class DoorManageComponent implements OnInit {
         min: TargetPosition.minValue,
         max: TargetPosition.maxValue,
         step: TargetPosition.minStep,
-      };
+      }
     }
   }
 
   onTargetPositionChange() {
-    this.targetPositionChanged.next(this.targetPosition.value);
+    this.targetPositionChanged.next(this.targetPosition.value)
   }
 }

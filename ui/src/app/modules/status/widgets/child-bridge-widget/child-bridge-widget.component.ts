@@ -1,73 +1,74 @@
-import {
-  Component,
-  Input,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
-import { ToastrService } from 'ngx-toastr';
-import { IoNamespace, WsService } from '@/app/core/ws.service';
+import { NgClass } from '@angular/common'
+import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core'
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe, TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+import { firstValueFrom } from 'rxjs'
+
+import { IoNamespace, WsService } from '@/app/core/ws.service'
 
 @Component({
-  selector: 'app-child-bridge-widget',
   templateUrl: './child-bridge-widget.component.html',
   styleUrls: ['./child-bridge-widget.component.scss'],
+  standalone: true,
+  imports: [
+    NgClass,
+    NgbTooltip,
+    TranslatePipe,
+  ],
 })
 export class ChildBridgeWidgetComponent implements OnInit, OnDestroy {
-  @Input() widget: any;
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
+  private $ws = inject(WsService)
 
-  public childBridges = [];
+  @Input() widget: any
 
-  private io: IoNamespace;
+  public childBridges = []
 
-  constructor(
-    private $toastr: ToastrService,
-    private $translate: TranslateService,
-    private $ws: WsService,
-  ) {}
+  private io: IoNamespace
+
+  constructor() {}
 
   ngOnInit(): void {
-    this.io = this.$ws.connectToNamespace('child-bridges');
+    this.io = this.$ws.connectToNamespace('child-bridges')
     this.io.connected.subscribe(async () => {
-      this.getChildBridgeMetadata();
-      this.io.socket.emit('monitor-child-bridge-status');
-    });
+      this.getChildBridgeMetadata()
+      this.io.socket.emit('monitor-child-bridge-status')
+    })
 
     this.io.socket.on('child-bridge-status-update', (data: any) => {
-      const existingBridge = this.childBridges.find(x => x.username === data.username);
+      const existingBridge = this.childBridges.find(x => x.username === data.username)
       if (existingBridge) {
-        Object.assign(existingBridge, data);
+        Object.assign(existingBridge, data)
       } else {
-        this.childBridges.push(data);
+        this.childBridges.push(data)
       }
-    });
+    })
   }
 
   getChildBridgeMetadata() {
     this.io.request('get-homebridge-child-bridge-status').subscribe((data) => {
-      this.childBridges = data;
-    });
+      this.childBridges = data
+    })
   }
 
   async restartChildBridge(bridge: any) {
-    bridge.restartInProgress = true;
+    bridge.restartInProgress = true
     try {
-      await this.io.request('restart-child-bridge', bridge.username).toPromise();
-    } catch (err) {
-      this.$toastr.error(
-        'Failed to restart bridge: ' + err.error?.message,
-        this.$translate.instant('toast.title_error'),
-      );
-      bridge.restartInProgress = false;
+      await firstValueFrom(this.io.request('restart-child-bridge', bridge.username))
+    } catch (error) {
+      console.error(error)
+      this.$toastr.error(this.$translate.instant('status.widget.bridge.restart_error'), this.$translate.instant('toast.title_error'))
+      bridge.restartInProgress = false
     } finally {
-
       setTimeout(() => {
-        bridge.restartInProgress = false;
-      }, 12000);
+        bridge.restartInProgress = false
+      }, 12000)
     }
   }
 
   ngOnDestroy(): void {
-    this.io.end();
+    this.io.end()
   }
 }

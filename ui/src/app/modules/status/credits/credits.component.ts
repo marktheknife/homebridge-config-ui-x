@@ -1,15 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, inject } from '@angular/core'
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
 
 @Component({
-  selector: 'app-credits',
   templateUrl: './credits.component.html',
-  styleUrls: ['./credits.component.scss'],
+  standalone: true,
+  imports: [TranslatePipe],
 })
-export class CreditsComponent implements OnInit {
-  constructor(
-    public activeModal: NgbActiveModal,
-  ) { }
+export class CreditsComponent {
+  $activeModal = inject(NgbActiveModal)
 
-  ngOnInit() {}
+  constructor() {}
 }

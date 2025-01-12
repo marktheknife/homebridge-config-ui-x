@@ -1,18 +1,9 @@
-import {
-  Controller,
-  Get,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
-import { AdminGuard } from '../../core/auth/guards/admin.guard';
-import { PluginsService } from './plugins.service';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
+
+import { AdminGuard } from '../../core/auth/guards/admin.guard'
+import { PluginsService } from './plugins.service'
 
 @ApiTags('Plugins')
 @ApiBearerAuth()
@@ -24,10 +15,10 @@ export class PluginsController {
   ) {}
 
   @UseGuards(AdminGuard)
-  @ApiOperation({ summary: 'List of currently installed Homebridge plugins.' })
+  @ApiOperation({ summary: 'Get the list of currently installed Homebridge plugins.' })
   @Get()
   pluginsGet() {
-    return this.pluginsService.getInstalledPlugins();
+    return this.pluginsService.getInstalledPlugins()
   }
 
   @UseGuards(AdminGuard)
@@ -35,7 +26,7 @@ export class PluginsController {
   @ApiParam({ name: 'query', type: 'string' })
   @Get('search/:query')
   pluginsSearch(@Param('query') query) {
-    return this.pluginsService.searchNpmRegistry(query.trim());
+    return this.pluginsService.searchNpmRegistry(query.trim())
   }
 
   @UseGuards(AdminGuard)
@@ -43,7 +34,7 @@ export class PluginsController {
   @ApiParam({ name: 'pluginName', type: 'string' })
   @Get('lookup/:pluginName')
   pluginLookup(@Param('pluginName') pluginName) {
-    return this.pluginsService.lookupPlugin(pluginName);
+    return this.pluginsService.lookupPlugin(pluginName)
   }
 
   @UseGuards(AdminGuard)
@@ -51,29 +42,27 @@ export class PluginsController {
   @ApiParam({ name: 'pluginName', type: 'string' })
   @Get('lookup/:pluginName/versions')
   getAvailablePluginVersions(@Param('pluginName') pluginName) {
-    return this.pluginsService.getAvailablePluginVersions(pluginName);
+    return this.pluginsService.getAvailablePluginVersions(pluginName)
   }
 
   @UseGuards(AdminGuard)
-  @ApiOperation({ summary: 'Get the config.schema.json for a plugin.' })
+  @ApiOperation({ summary: 'Get the `config.schema.json` for a plugin.' })
   @ApiParam({ name: 'pluginName', type: 'string' })
   @Get('config-schema/:pluginName')
   getPluginConfigSchema(@Param('pluginName') pluginName) {
     try {
-      return this.pluginsService.getPluginConfigSchema(pluginName);
+      return this.pluginsService.getPluginConfigSchema(pluginName)
     } catch (e) {
-      console.log('did throw error');
-      console.error(e);
+      console.error(e)
     }
-    return;
   }
 
   @UseGuards(AdminGuard)
-  @ApiOperation({ summary: 'Get the CHANGELOG.md (post install) for a plugin.' })
+  @ApiOperation({ summary: 'Get the `CHANGELOG.md` (post install) for a plugin.' })
   @ApiParam({ name: 'pluginName', type: 'string' })
   @Get('changelog/:pluginName')
   getPluginChangeLog(@Param('pluginName') pluginName) {
-    return this.pluginsService.getPluginChangeLog(pluginName);
+    return this.pluginsService.getPluginChangeLog(pluginName)
   }
 
   @UseGuards(AdminGuard)
@@ -81,17 +70,17 @@ export class PluginsController {
   @ApiParam({ name: 'pluginName', type: 'string' })
   @Get('release/:pluginName')
   getPluginRelease(@Param('pluginName') pluginName) {
-    return this.pluginsService.getPluginRelease(pluginName);
+    return this.pluginsService.getPluginRelease(pluginName)
   }
 
   @UseGuards(AdminGuard)
   @ApiOperation({
     summary: 'Attempt to resolve the type (platform or accessory) and alias for a plugin.',
-    description: '**Warning**: pluginAlias and pluginType will be `null` if the type or alias could not be resolved.',
+    description: 'NOTE: `pluginAlias` and `pluginType` will be `null` if the type or alias could not be resolved.',
   })
   @ApiParam({ name: 'pluginName', type: 'string' })
   @Get('alias/:pluginName')
   getPluginAlias(@Param('pluginName') pluginName) {
-    return this.pluginsService.getPluginAlias(pluginName);
+    return this.pluginsService.getPluginAlias(pluginName)
   }
 }

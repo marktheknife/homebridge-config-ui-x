@@ -1,31 +1,39 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
-import { HumidifierDehumidifierManageComponent } from '@/app/core/accessories/types/humidifierdehumidifier/humidifierdehumidifier.manage.component'; // eslint-disable-line max-len
+import { NgClass } from '@angular/common'
+import { Component, inject, Input } from '@angular/core'
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
+import { HumidifierDehumidifierManageComponent } from '@/app/core/accessories/types/humidifierdehumidifier/humidifierdehumidifier.manage.component'
+import { LongClickDirective } from '@/app/core/directives/longclick.directive'
 
 @Component({
   selector: 'app-humidifierdehumidifier',
   templateUrl: './humidifierdehumidifier.component.html',
   styleUrls: ['./humidifierdehumidifier.component.scss'],
+  standalone: true,
+  imports: [
+    LongClickDirective,
+    NgClass,
+    TranslatePipe,
+  ],
 })
-export class HumidifierDehumidifierComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
-  model = 1;
+export class HumidifierDehumidifierComponent {
+  private $modal = inject(NgbModal)
 
-  constructor(
-    private modalService: NgbModal,
-  ) {}
+  @Input() public service: ServiceTypeX
+  model = 1
 
-  ngOnInit() {}
+  constructor() {}
 
   onClick() {
-    this.service.getCharacteristic('Active').setValue(this.service.values.Active ? 0 : 1);
+    this.service.getCharacteristic('Active').setValue(this.service.values.Active ? 0 : 1)
   }
 
   onLongClick() {
-    const ref = this.modalService.open(HumidifierDehumidifierManageComponent, {
+    const ref = this.$modal.open(HumidifierDehumidifierManageComponent, {
       size: 'sm',
-    });
-    ref.componentInstance.service = this.service;
+    })
+    ref.componentInstance.service = this.service
   }
 }

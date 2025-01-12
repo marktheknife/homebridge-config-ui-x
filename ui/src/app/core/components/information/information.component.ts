@@ -1,22 +1,21 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, inject, Input } from '@angular/core'
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
 
 @Component({
-  selector: 'app-information',
   templateUrl: './information.component.html',
-  styleUrls: ['./information.component.scss'],
+  standalone: true,
+  imports: [TranslatePipe],
 })
-export class InformationComponent implements OnInit {
-  @Input() title: string;
-  @Input() subtitle: string | null;
-  @Input() message: string;
-  @Input() ctaButtonLabel: string;
-  @Input() ctaButtonLink: string;
-  @Input() faIconClass: string;
+export class InformationComponent {
+  $activeModal = inject(NgbActiveModal)
 
-  constructor(
-    public activeModal: NgbActiveModal,
-  ) {}
+  @Input() title: string
+  @Input() subtitle?: string
+  @Input() message: string
+  @Input() ctaButtonLabel?: string
+  @Input() ctaButtonLink?: string
+  @Input() faIconClass: string
 
-  ngOnInit() {}
+  constructor() {}
 }

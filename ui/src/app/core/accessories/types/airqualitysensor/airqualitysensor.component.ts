@@ -1,17 +1,19 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
+import { NgClass } from '@angular/common'
+import { Component, Input } from '@angular/core'
+import { InlineSVGModule } from 'ng-inline-svg-2'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
 
 @Component({
   selector: 'app-airqualitysensor',
   templateUrl: './airqualitysensor.component.html',
-  styleUrls: ['./airqualitysensor.component.scss'],
+  standalone: true,
+  imports: [NgClass, InlineSVGModule],
 })
-export class AirqualitysensorComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
+export class AirqualitysensorComponent {
+  @Input() public service: ServiceTypeX
 
-  public labels = ['Unknown', 'Excellent', 'Good', 'Fair', 'Inferior', 'Poor'];
+  public labels = ['Unknown', 'Excellent', 'Good', 'Fair', 'Inferior', 'Poor']
 
   constructor() {}
-
-  ngOnInit() {}
 }

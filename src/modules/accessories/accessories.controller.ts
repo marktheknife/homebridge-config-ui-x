@@ -6,16 +6,12 @@ import {
   Put,
   Req,
   UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
-import { AccessorySetCharacteristicDto } from './accessories.dto';
-import { AccessoriesService } from './accessories.service';
+} from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
+
+import { AccessorySetCharacteristicDto } from './accessories.dto'
+import { AccessoriesService } from './accessories.service'
 
 @ApiTags('Accessories')
 @ApiBearerAuth()
@@ -28,11 +24,11 @@ export class AccessoriesController {
 
   @ApiOperation({
     summary: 'Return a list of Homebridge accessories.',
-    description: 'Homebridge must be running in "insecure" mode to access the accessory list.',
+    description: 'Homebridge must be running in `insecure` mode to access the accessory list.',
   })
   @Get('/')
   getAccessories() {
-    return this.accessoriesService.loadAccessories();
+    return this.accessoriesService.loadAccessories()
   }
 
   @ApiOperation({
@@ -40,25 +36,25 @@ export class AccessoriesController {
   })
   @Get('/layout')
   getAccessoryLayout(@Req() req) {
-    return this.accessoriesService.getAccessoryLayout(req.user.username);
+    return this.accessoriesService.getAccessoryLayout(req.user.username)
   }
 
   @ApiOperation({
-    summary: 'Get a single accessory and refresh it\'s characteristics.',
-    description: 'Get the "uniqueId" from the GET /api/accessories method.',
+    summary: 'Get a single accessory and refresh its characteristics.',
+    description: 'Get the `uniqueId` from `GET /api/accessories`.',
   })
   @Get('/:uniqueId')
   getAccessory(@Param('uniqueId') uniqueId: string) {
-    return this.accessoriesService.getAccessory(uniqueId);
+    return this.accessoriesService.getAccessory(uniqueId)
   }
 
   @ApiOperation({
     summary: 'Set the value of an accessory characteristic.',
-    description: 'Get the "uniqueId" and "characteristicType" values from the GET /api/accessories method.',
+    description: 'Get the `uniqueId` and `characteristicType` values from `GET /api/accessories`.',
   })
   @ApiParam({ name: 'uniqueId' })
   @Put('/:uniqueId')
   setAccessoryCharacteristic(@Param('uniqueId') uniqueId, @Body() body: AccessorySetCharacteristicDto) {
-    return this.accessoriesService.setAccessoryCharacteristic(uniqueId, body.characteristicType, body.value);
+    return this.accessoriesService.setAccessoryCharacteristic(uniqueId, body.characteristicType, body.value)
   }
 }

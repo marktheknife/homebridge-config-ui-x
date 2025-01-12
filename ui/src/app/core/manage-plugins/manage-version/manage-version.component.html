@@ -1,0 +1,89 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title">{{ plugin.displayName || plugin.name }}</h5>
+    <button
+      type="button"
+      class="close"
+      data-dismiss="modal"
+      [attr.aria-label]="'form.button_close' | translate"
+      (click)="$activeModal.dismiss('Dismiss')"
+    >
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body d-flex flex-row flex-grow-1 w-100">
+    @if (loading) {
+    <div class="w-100 text-center primary-text">
+      <i class="fa fa-fw fa-cog fa-spin" style="font-size: 75px"></i>
+    </div>
+    } @if (!loading) {
+    <div class="w-100 text-center">
+      @if (plugin.installedVersion) {
+      <i class="fas fa-fw fa-code-compare primary-text mb-3" style="font-size: 75px"></i>
+      <h6 class="mb-3">{{ 'plugins.manage.select_version' | translate }}</h6>
+      <p class="mb-3">
+        {{ 'plugins.status_installed' | translate }}: <span class="text-monospace">v{{ plugin.installedVersion }}</span>
+      </p>
+      } @if (!plugin.installedVersion) {
+      <i class="far fa-fw fa-arrow-alt-circle-down primary-text mb-3" style="font-size: 75px"></i>
+      <h6 class="mb-3">{{ 'plugins.manage.select_version' | translate }}</h6>
+      }
+      <ul class="list-group list-group-box mb-0">
+        @for (version of versionsWithTags; track version) {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span class="text-left">
+            {{ version.tag }}
+            <br />
+            <small class="grey-text text-monospace">v{{ version.version }}</small>
+          </span>
+          @if (plugin.installedVersion !== version.version) {
+          <button class="btn btn-primary m-0 ml-3" (click)="doInstall(version.version)">
+            <i class="fas fa-fw fa-arrow-alt-circle-down"></i>
+          </button>
+          } @if (plugin.installedVersion === version.version) {
+          <button class="btn btn-primary m-0 ml-3" disabled>
+            <i class="fas fa-fw fa-check-circle"></i>
+          </button>
+          }
+        </li>
+        }
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div class="text-left" style="min-width: 50%">
+            {{ 'plugins.manage.all_versions' | translate }}
+            <br />
+            <select class="custom-select w-100" style="font-size: 0.875rem" [(ngModel)]="versionSelect">
+              @for (version of versions; track version) {
+              <option [value]="version.version">v{{ version.version }}</option>
+              }
+            </select>
+          </div>
+          @if (versionSelect !== plugin.installedVersion) {
+          <button class="btn btn-primary m-0 ml-3" [disabled]="!versionSelect" (click)="doInstall(versionSelect)">
+            <i class="fas fa-fw fa-arrow-alt-circle-down"></i>
+          </button>
+          } @if (versionSelect && versionSelect === plugin.installedVersion) {
+          <button class="btn btn-primary m-0 ml-3" disabled>
+            <i class="fas fa-fw fa-check-circle"></i>
+          </button>
+          }
+        </li>
+      </ul>
+    </div>
+    }
+  </div>
+  <div class="modal-footer justify-content-between">
+    <div class="text-left"></div>
+    <div class="text-center">
+      <button
+        type="button"
+        class="btn btn-elegant"
+        data-dismiss="modal"
+        (click)="$activeModal.dismiss('Dismiss')"
+        [attr.aria-label]="'form.button_close' | translate"
+      >
+        {{ 'form.button_close' | translate }}
+      </button>
+    </div>
+    <div class="text-right"></div>
+  </div>
+</div>

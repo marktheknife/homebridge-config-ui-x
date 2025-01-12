@@ -1,21 +1,20 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, inject, Input } from '@angular/core'
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
 
 @Component({
-  selector: 'app-confirm',
   templateUrl: './confirm.component.html',
-  styleUrls: ['./confirm.component.scss'],
+  standalone: true,
+  imports: [TranslatePipe],
 })
-export class ConfirmComponent implements OnInit {
-  @Input() title: string;
-  @Input() message: string;
-  @Input() confirmButtonLabel: string;
-  @Input() confirmButtonClass: string;
-  @Input() faIconClass: string;
+export class ConfirmComponent {
+  $activeModal = inject(NgbActiveModal)
 
-  constructor(
-    public activeModal: NgbActiveModal,
-  ) {}
+  @Input() title: string
+  @Input() message: string
+  @Input() confirmButtonLabel: string
+  @Input() confirmButtonClass: string
+  @Input() faIconClass: string
 
-  ngOnInit() {}
+  constructor() {}
 }

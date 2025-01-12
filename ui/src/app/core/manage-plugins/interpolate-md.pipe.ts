@@ -1,12 +1,11 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core'
 
 @Pipe({
   name: 'interpolateMd',
+  standalone: true,
 })
 export class InterpolateMdPipe implements PipeTransform {
-
-  transform(value: string, ...args: unknown[]): unknown {
-    return value
-      .replace(/\${{HOSTNAME}}/g, location.hostname);
+  transform(value: string): string {
+    return value.replace(/\$\{\{HOSTNAME\}\}/g, location.hostname)
   }
 }

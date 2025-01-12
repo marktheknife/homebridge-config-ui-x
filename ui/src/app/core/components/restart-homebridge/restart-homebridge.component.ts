@@ -1,22 +1,43 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, inject, Input } from '@angular/core'
+import { Router } from '@angular/router'
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe, TranslateService } from '@ngx-translate/core'
+import { ToastrService } from 'ngx-toastr'
+
+import { ApiService } from '@/app/core/api.service'
 
 @Component({
-  selector: 'app-confirm',
   templateUrl: './restart-homebridge.component.html',
-  styleUrls: ['./restart-homebridge.component.scss'],
+  standalone: true,
+  imports: [TranslatePipe],
 })
-export class RestartHomebridgeComponent implements OnInit {
-  constructor(
-    public activeModal: NgbActiveModal,
-    private $router: Router,
-  ) { }
+export class RestartHomebridgeComponent {
+  $activeModal = inject(NgbActiveModal)
+  private $api = inject(ApiService)
+  private $router = inject(Router)
+  private $toastr = inject(ToastrService)
+  private $translate = inject(TranslateService)
 
-  ngOnInit() {}
+  @Input() fullRestart = false
+
+  constructor() {}
 
   public onRestartHomebridgeClick() {
-    this.$router.navigate(['/restart']);
-    this.activeModal.close();
+    if (!this.fullRestart) {
+      this.$router.navigate(['/restart'])
+      this.$activeModal.close()
+      return
+    }
+
+    this.$api.put('/platform-tools/hb-service/set-full-service-restart-flag', {}).subscribe({
+      next: () => {
+        this.$router.navigate(['/restart'])
+        this.$activeModal.close()
+      },
+      error: (error) => {
+        console.error(error)
+        this.$toastr.error(error.message, this.$translate.instant('toast.title_error'))
+      },
+    })
   }
 }

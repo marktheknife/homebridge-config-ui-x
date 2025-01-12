@@ -1,36 +1,82 @@
 <div class="modal-content">
   <div class="modal-header">
     <h5 class="modal-title">{{ 'plugins.manage.information' | translate }}</h5>
-    <button type="button" class="close" data-dismiss="modal" [attr.aria-label]="'form.button_close' | translate"
-      (click)="activeModal.dismiss('Dismiss')">
+    <button
+      type="button"
+      class="close"
+      data-dismiss="modal"
+      [attr.aria-label]="'form.button_close' | translate"
+      (click)="$activeModal.dismiss('Dismiss')"
+    >
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
-  <div class="modal-body w-100 text-center">
-    <img [src]="plugin.icon" (error)="handleIconError()" alt="Plugin Icon" class="mb-3 plugin-icon">
-    <h4>{{ plugin.displayName || plugin.name }}</h4>
-    <p class="my-3">{{ plugin.description }}</p>
-    <p class="m-0 grey-text">{{ plugin.name }}</p>
-    <p class="m-0 grey-text">@{{ plugin.author }}</p>
+  <div class="modal-body text-center">
+    <img [src]="plugin.icon" (error)="handleIconError()" alt="Plugin Icon" class="mb-3 plugin-icon-card" />
+    <h4 class="mb-1">{{ plugin.displayName }}</h4>
+    <p class="grey-text mb-0 text-monospace">{{ plugin.name }}</p>
+    <p class="grey-text mb-1 text-monospace">&#64;{{ plugin.author }}</p>
+    <p class="mb-3">{{ plugin.description }}</p>
+    <i
+      class="fas fa-fw fa-shield-alt mb-3"
+      style="font-size: 48px"
+      [ngClass]="{ 'orange-text': !plugin.verifiedPlugin && !plugin.verifiedPlusPlugin, 'grey-text': plugin.verifiedPlugin || plugin.verifiedPlusPlugin }"
+      [ngStyle]="{ 'opacity': !plugin.verifiedPlugin && !plugin.verifiedPlusPlugin ? 1 : 0.25 }"
+    ></i>
+    <i
+      class="fas fa-fw fa-shield-alt mb-3"
+      style="font-size: 48px"
+      [ngClass]="{ 'green-text': !plugin.isHbScoped && (plugin.verifiedPlugin || plugin.verifiedPlusPlugin), 'grey-text': plugin.isHbScoped || (!plugin.verifiedPlugin && !plugin.verifiedPlusPlugin) }"
+      [ngStyle]="{ 'opacity': !plugin.isHbScoped && (plugin.verifiedPlugin || plugin.verifiedPlusPlugin) ? 1 : 0.25 }"
+    ></i>
+    <i
+      class="fas fa-fw fa-shield-alt mb-3"
+      style="font-size: 48px"
+      [ngClass]="{ 'scoped-text': plugin.isHbScoped, 'grey-text': !plugin.isHbScoped }"
+      [ngStyle]="{ 'opacity': plugin.isHbScoped ? 1 : 0.25 }"
+    ></i>
+    @if (plugin.isHbScoped) {
+    <h6 class="mb-2">{{ 'plugins.manage.scoped_subtitle' | translate }}</h6>
+    <p class="mb-1 grey-text">{{ 'plugins.manage.scoped_message' | translate }}</p>
+    <p class="mb-1 grey-text">{{ 'plugins.manage.verified_message' | translate }}</p>
+    } @if (!plugin.isHbScoped && (plugin.verifiedPlugin || plugin.verifiedPlusPlugin)) {
+    <h6 class="mb-2">{{ 'plugins.manage.verified_subtitle' | translate }}</h6>
+    <p class="mb-1 grey-text">{{ 'plugins.manage.verified_message' | translate }}</p>
+    } @if (!plugin.verifiedPlugin && !plugin.verifiedPlusPlugin) {
+    <h6 class="mb-2">{{ 'plugins.manage.unverified_subtitle' | translate }}</h6>
+    <p class="mb-1 grey-text">{{ 'plugins.manage.unverified_message' | translate }}</p>
+    }
+    <p
+      class="mb-0 grey-text"
+      [innerHTML]="'plugins.manage.more_info' | translate: { scopedLink: linkScoped, verifiedLink: linkVerified }"
+    ></p>
   </div>
   <div class="modal-footer justify-content-between">
     <div class="text-left">
-      <button *ngIf="plugin.links.homepage || plugin.links.npm" type="button" class="btn btn-elegant"
-        data-dismiss="modal" (click)="activeModal.dismiss('Dismiss')">
+      @if (plugin.links.homepage || plugin.links.npm) {
+      <button type="button" class="btn btn-elegant" data-dismiss="modal" (click)="$activeModal.dismiss('Dismiss')">
         {{ 'form.button_close' | translate }}
       </button>
+      }
     </div>
     <div class="text-center">
-      <button *ngIf="!plugin.links.homepage && !plugin.links.npm" type="button" class="btn btn-elegant"
-        data-dismiss="modal" (click)="activeModal.dismiss('Dismiss')">
+      @if (!plugin.links.homepage && !plugin.links.npm) {
+      <button type="button" class="btn btn-elegant" data-dismiss="modal" (click)="$activeModal.dismiss('Dismiss')">
         {{ 'form.button_close' | translate }}
       </button>
+      }
     </div>
     <div class="text-right">
-      <a *ngIf="plugin.links.homepage || plugin.links.npm" class="btn btn-primary text-decoration-none"
-        target="_blank" href="{{ plugin.links.homepage || plugin.links.npm }}" rel="noopener noreferrer">
-        {{ 'plugins.button_homepage' | translate }} <i class='fas fa-fw fa-external-link-alt'></i>
+      @if (plugin.links.homepage || plugin.links.npm) {
+      <a
+        class="btn btn-primary text-decoration-none"
+        target="_blank"
+        [href]="plugin.links.homepage || plugin.links.npm"
+        rel="noopener noreferrer"
+      >
+        {{ 'plugins.button_homepage' | translate }} <i class="fas fa-fw fa-external-link-alt"></i>
       </a>
+      }
     </div>
   </div>
 </div>

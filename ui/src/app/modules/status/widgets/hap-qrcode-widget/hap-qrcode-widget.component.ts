@@ -1,73 +1,79 @@
-import {
-  Component,
-  ElementRef,
-  Input,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { Subject } from 'rxjs';
-import { IoNamespace, WsService } from '@/app/core/ws.service';
+import { NgClass, NgStyle } from '@angular/common'
+import { Component, ElementRef, inject, Input, OnInit, viewChild } from '@angular/core'
+import { TranslatePipe } from '@ngx-translate/core'
+import { Subject } from 'rxjs'
+
+import { QrcodeComponent } from '@/app/core/components/qrcode/qrcode.component'
+import { IoNamespace, WsService } from '@/app/core/ws.service'
 
 @Component({
-  selector: 'app-hap-qrcode-widget',
   templateUrl: './hap-qrcode-widget.component.html',
-  styleUrls: ['./hap-qrcode-widget.component.scss'],
+  standalone: true,
+  imports: [
+    NgStyle,
+    QrcodeComponent,
+    TranslatePipe,
+    NgClass,
+  ],
 })
 export class HapQrcodeWidgetComponent implements OnInit {
-  @ViewChild('pincode', { static: true }) pincodeElement: ElementRef;
-  @ViewChild('qrcodecontainer', { static: true }) qrcodeContainerElement: ElementRef;
+  private $ws = inject(WsService)
 
-  @Input() resizeEvent: Subject<any>;
+  readonly pincodeElement = viewChild<ElementRef>('pincode')
+  readonly qrcodeContainerElement = viewChild<ElementRef>('qrcodecontainer')
 
-  public pin = 'Loading...';
-  public setupUri: string | null = null;
-  public qrCodeHeight: number;
-  public qrCodeWidth: number;
+  @Input() resizeEvent: Subject<any>
 
-  private io: IoNamespace;
+  public paired: boolean = false
+  public pin = 'Loading...'
+  public setupUri: string | null = null
+  public qrCodeHeight: number
+  public qrCodeWidth: number
 
-  constructor(
-    private $ws: WsService,
-  ) {}
+  private io: IoNamespace
+
+  constructor() {}
 
   ngOnInit() {
-    this.io = this.$ws.getExistingNamespace('status');
+    this.io = this.$ws.getExistingNamespace('status')
 
-    this.resizeQrCode();
+    this.resizeQrCode()
 
     this.io.socket.on('homebridge-status', (data) => {
-      this.pin = data.pin;
+      this.pin = data.pin
+      this.paired = data.paired
 
       if (data.setupUri) {
-        this.setupUri = data.setupUri;
+        this.setupUri = data.setupUri
       }
-    });
+    })
 
     if (this.io.socket.connected) {
-      this.getPairingPin();
+      this.getPairingPin()
     }
 
-    // subscribe to grid resize events
+    // Subscribe to grid resize events
     this.resizeEvent.subscribe({
       next: () => {
-        this.resizeQrCode();
+        this.resizeQrCode()
       },
-    });
+    })
   }
 
   resizeQrCode() {
-    const containerHeight = (this.qrcodeContainerElement.nativeElement as HTMLElement).offsetHeight;
-    const containerWidth = (this.qrcodeContainerElement.nativeElement as HTMLElement).offsetWidth;
-    const pinCodeHeight = (this.pincodeElement.nativeElement as HTMLElement).offsetHeight;
+    const containerHeight = (this.qrcodeContainerElement().nativeElement as HTMLElement).offsetHeight
+    const containerWidth = (this.qrcodeContainerElement().nativeElement as HTMLElement).offsetWidth
+    const pinCodeHeight = (this.pincodeElement().nativeElement as HTMLElement).offsetHeight
 
-    this.qrCodeHeight = containerHeight - pinCodeHeight;
-    this.qrCodeWidth = containerWidth > this.qrCodeHeight ? this.qrCodeHeight : containerWidth;
+    this.qrCodeHeight = containerHeight - pinCodeHeight
+    this.qrCodeWidth = containerWidth > this.qrCodeHeight ? this.qrCodeHeight : containerWidth
   }
 
   getPairingPin() {
     this.io.request('get-homebridge-pairing-pin').subscribe((data) => {
-      this.pin = data.pin;
-      this.setupUri = data.setupUri;
-    });
+      this.pin = data.pin
+      this.setupUri = data.setupUri
+      this.paired = data.paired
+    })
   }
 }

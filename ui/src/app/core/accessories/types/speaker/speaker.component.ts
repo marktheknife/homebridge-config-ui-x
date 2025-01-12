@@ -1,32 +1,41 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
-import { SpeakerManageComponent } from '@/app/core/accessories/types/speaker/speaker.manage.component';
+import { NgClass } from '@angular/common'
+import { Component, inject, Input } from '@angular/core'
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
+import { TranslatePipe } from '@ngx-translate/core'
+import { InlineSVGModule } from 'ng-inline-svg-2'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
+import { SpeakerManageComponent } from '@/app/core/accessories/types/speaker/speaker.manage.component'
+import { LongClickDirective } from '@/app/core/directives/longclick.directive'
 
 @Component({
   selector: 'app-speaker',
   templateUrl: './speaker.component.html',
-  styleUrls: ['./speaker.component.scss'],
+  standalone: true,
+  imports: [
+    LongClickDirective,
+    NgClass,
+    InlineSVGModule,
+    TranslatePipe,
+  ],
 })
-export class SpeakerComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
+export class SpeakerComponent {
+  private $modal = inject(NgbModal)
 
-  constructor(
-    private modalService: NgbModal,
-  ) {}
+  @Input() public service: ServiceTypeX
 
-  ngOnInit() {}
+  constructor() {}
 
   onClick() {
-    this.service.getCharacteristic('Mute').setValue(!this.service.values.Mute);
+    this.service.getCharacteristic('Mute').setValue(!this.service.values.Mute)
   }
 
   onLongClick() {
     if ('Volume' in this.service.values) {
-      const ref = this.modalService.open(SpeakerManageComponent, {
+      const ref = this.$modal.open(SpeakerManageComponent, {
         size: 'sm',
-      });
-      ref.componentInstance.service = this.service;
+      })
+      ref.componentInstance.service = this.service
     }
   }
 }

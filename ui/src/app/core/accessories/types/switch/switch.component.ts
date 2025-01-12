@@ -1,19 +1,28 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces';
+import { NgClass } from '@angular/common'
+import { Component, Input } from '@angular/core'
+import { TranslatePipe } from '@ngx-translate/core'
+import { InlineSVGModule } from 'ng-inline-svg-2'
+
+import { ServiceTypeX } from '@/app/core/accessories/accessories.interfaces'
+import { LongClickDirective } from '@/app/core/directives/longclick.directive'
 
 @Component({
   selector: 'app-switch',
   templateUrl: './switch.component.html',
-  styleUrls: ['./switch.component.scss'],
+  standalone: true,
+  imports: [
+    LongClickDirective,
+    NgClass,
+    InlineSVGModule,
+    TranslatePipe,
+  ],
 })
-export class SwitchComponent implements OnInit {
-  @Input() public service: ServiceTypeX;
+export class SwitchComponent {
+  @Input() public service: ServiceTypeX
 
   constructor() {}
 
-  ngOnInit() {}
-
   onClick() {
-    this.service.getCharacteristic('On').setValue(!this.service.values.On);
+    this.service.getCharacteristic('On').setValue(!this.service.values.On)
   }
 }

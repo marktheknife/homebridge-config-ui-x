@@ -1,13 +1,12 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { LogsComponent } from '@/app/modules/logs/logs.component';
+import { NgModule } from '@angular/core'
+import { RouterModule, Routes } from '@angular/router'
 
 const routes: Routes = [
   {
     path: '',
-    component: LogsComponent,
+    loadComponent: () => import('@/app/modules/logs/logs.component').then(m => m.LogsComponent),
   },
-];
+]
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],

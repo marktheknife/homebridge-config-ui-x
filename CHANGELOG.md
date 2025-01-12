@@ -2,6 +2,501 @@
 
 All notable changes to `homebridge-config-ui-x` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## v4.68.0 (2025-01-08)
+
+Happy 2025 to all our users! 🎉
+
+### ⚠️ Upcoming Deprecations:
+
+- The **next major version** `v5` of the Homebridge UI will drop support for:
+  - Node.js `v16` and earlier, so please update to `v18` or `v20` or `v22` - [more info on updating](https://github.com/homebridge/homebridge/wiki/How-To-Update-Node.js)
+  - Raspberry Pi devices running on the `armv6` architecture (like the Pi 1 and Pi Zero) - please update your hardware
+  - Instances using `pnpm` as the package manager - consider updating your Homebridge instance to use npm instead - [more info on updating](https://github.com/homebridge/homebridge-apt-pkg/blob/latest/README.md#using-apt)
+- Note that these are not requirements for UI `v4.68.0`
+
+### UI Changes
+
+- updates to the `cs.json` language file (#2311) (@DavidHuljak)
+- improved messaging on plugin child bridge modal
+- further improvements to plugin search
+- implement and allow switching to scoped plugins
+- merge plugin info and verified modals
+  - condensing plugin card into title + three lines of description
+- consistent formatting of child bridge names across the ui
+- general improvements across the ui
+  - status page:
+    - individual widget setting form design made consistent with other forms
+    - added pairing status to qr code widget
+  - plugins page:
+    - visual improvements to plugin child bridge settings modal
+    - allow plugins to disable/enable the save button in custom uis (see below section)
+    - allow configuring [multiple accessories on the same child bridge](https://github.com/homebridge/homebridge/wiki/Child-Bridges#multiple-accessories-on-the-same-child-bridge) via the ui
+  - accessories page:
+    - changed accessory spanner icon to info icon (more descriptive)
+    - accessory info modal redesigned and provides more info where possible like the accessory UUID (including a link to remove from the cache)
+    - added support modal with some info about rooms and accessories (visible on desktop)
+  - json config page:
+    - redesigned restore modal to be more consistent with other modals
+  - settings page:
+    - chevron icons replaced with arrow-right icons
+    - removed restore modal from settings page and is accessible from the backup modal
+    - backup modal redesigned to be more consistent with other modals
+    - added new display -> menu mode setting which allows keeping the side menu from expanding out on desktop
+    - redesigned and improved accessories and bridges sections and modals
+  - users page:
+    - add user and edit user modals redesigned to be more consistent with other modals
+    - user card updated with icon buttons for edit/delete rather than text buttons
+
+### Plugin Custom UI Changes
+
+The UI has recently been updated with `@homebridge/plugin-ui-utils` @ `v2.0.0`, which includes a new feature to allow plugin developers to dynamically enable and disable the `Save` button in the custom UI modal.
+Two new methods have been added for this purpose:
+
+- `homebridge.disableSaveButton()`
+- `homebridge.enableSaveButton()`
+
+Developers: to maintain compatibility with older versions of the Homebridge UI, it is recommended to check if the methods exist before calling them in your custom UIs:
+
+- `homebridge.disableSaveButton?.()`
+- `homebridge.enableSaveButton?.()`
+
+### Other Changes
+
+- auto-fix ui theme setting property if existing value is not valid
+- do not allow `armv6l` users to update to UI `v5`
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v2.0.5`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v2.0.0`
+
+## v4.67.0 (2024-12-28)
+
+### UI Changes
+
+- add explanation of deleting child bridges when un-toggling
+- add filtering to search to improve results (#2286) (@justjam2013) (fixes [#2266](https://github.com/homebridge/homebridge-config-ui-x/issues/2266))
+- fix spacing issue with hidden accessories
+- make margins consistent of un/lock buttons on status screen
+- fix ui not restarting properly after updating the ui
+- use broom icon in remove bridge accessories (to match similar modal from plugin menu)
+
+### Other Changes
+
+- improve and finish up previous angular migration
+- update `hap-client` + `plugin-ui-utils` hb dependencies
+- update dependencies
+- improve lint sorting of imports
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v2.0.5`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v2.0.0`
+
+## v4.66.0 (2024-12-25)
+
+### UI Changes
+
+- fix verified plugins link in support module (fixes [#2295](https://github.com/homebridge/homebridge-config-ui-x/issues/2295))
+- add missing modal footer `<div>`s to accessory control modals
+- fix radio button groups in certain accessory control modals (fixes [#2294](https://github.com/homebridge/homebridge-config-ui-x/issues/2294))
+
+### Other Changes
+
+- format svg files nicely as part of lint
+- upgrade angular from `v18` to `v19`
+- delete unpaired bridges when toggling bridges off (#2284) (@justjam2013) (fixes [#2257](https://github.com/homebridge/homebridge-config-ui-x/issues/2257))
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.65.2 (2024-12-15)
+
+### UI Changes
+
+- Rollback recent changes to plugin search (#2289) (@justjam2013)
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.65.1 (2024-12-13)
+
+### UI Changes
+
+- updates to the `th.json` language file (#2271) (@tomzt)
+- updates to the `de.json` language file (#2250) (@Staubgeborener)
+- Remove unrelated plugins from search (#2272) (@justjam2013)
+
+### Other Changes
+
+- fix types + update dependencies
+- fix attach artifacts to release workflow
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.65.0 (2024-12-08)
+
+### UI Changes
+
+- updates to the `uk.json` language file (#2262) (@xrust83)
+- logo and `homebridge` text should link to status page
+- Add icons for shower head and water faucet valve types (#2267) (@justjam2013)
+- Removed conditional for displaying search exit component (#2269) (@justjam2013)
+
+### Other Changes
+
+- Fix typo in console message (#2264) (@markholland)
+- updated dependencies
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.64.0 (2024-11-30)
+
+### UI Changes
+
+- updates to the `de.json` language file (#2249) (@Staubgeborener)
+- updates to the `ko.json` language file (#2251) (@alphaorderly)
+- updates to the `uk.json` language file (#2255) (@xrust83)
+- add reload menu item when using as a PWA
+
+### Other Changes
+
+- dependency updates
+- fix npm search max character limit
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.63.0 (2024-11-17)
+
+### UI Changes
+
+- updates to the `th.json` language file (#2211) (@tomzt)
+- updates to the `nl.json` language file (#2213) (@tooh)
+- updates to the `es.json` language file (#2235) (@AxelDreemurr)
+- updates to the `fi.json` language file (#2218, #2229) (@l1500s)
+- fix widget config saving on dashboard
+- use native language for validation messages where available
+  - currently available for `de` `en` `es` `fr` `it` `pt` `zh`
+- switch from a top menu to a sidebar menu
+- show pairing status for bridges around the ui
+- consistent labels for sensor-type accessories
+- update default dashboard layout
+- remove pnpm warning modal
+- use smoke detector icon for carbon monoxide and dioxide sensors
+
+### Other Changes
+
+- migrate `@zajsf/*` to `@ng-formworks/*` for plugin schema forms
+- check for service mode when querying child bridge status
+- perform a full restart when updating `homebridge`
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.62.0 (2024-10-19)
+
+### UI Changes
+
+- Create fi.json (#2205) (@l1500s)
+  - The Homebridge UI is now available in 28 different languages!
+- updates to `fi.json` language file (#2206) (@l1500s)
+- updates to `ru.json` language file (#2207) (@SeregaTarasov)
+- add plugin list modal for updating to hb v2.0
+- change placement of page header tooltips to bottom
+- single modal for showing/hiding widgets
+- option to delete a scheduled backup file
+- option to restore a scheduled backup file
+  - without the need to download and upload it
+- backup modal - move generate now button to list
+- add finnish to available languages and settings
+
+### Other Changes
+
+- relocate `disable-plugin` component to `core/plugins` module
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.61.0 (2024-10-11)
+
+### UI Changes
+
+- fix login wallpaper setting field should in safari
+  - it should not be offering to populate with a username/password from credentials manager
+- move docker startup script to settings
+  - this was in the power options module, and is now at the bottom of the 'startup & environment' section in the settings module
+- consistent designs for power options modules
+  - in particular, the `restart`, `docker-restart`, `linux-restart` and `linux-shutdown` modules
+- fix checkboxes widget in plugin config screens (fixes [#2200](https://github.com/homebridge/homebridge-config-ui-x/issues/2200))
+- fix json block switching in manual plugin config
+
+### Other Changes
+
+- update angular build tool to `application`
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.60.1 (2024-10-06)
+
+### UI Changes
+
+- fix gsh plugin custom ui
+- network widget - explain why ni list is empty
+
+### Other Changes
+
+- update some repo screenshots
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.60.0 (2024-10-05)
+
+- ⚠️ After updating to this release, you may find that your UI theme resets to the default. This reset will only occur once. You can visit the settings section to change it back to your preferred theme.
+- ⚠️ If you use the `/api/auth/settings` endpoint (e.g. in a custom application), please note that this endpoint now returns less information for an unauthenticated user.
+  It will return a full payload when a valid access token is provided.
+
+### UI Changes
+
+- added more notification messages to translation files
+- settings option to clear accessory cache for a specific bridge
+  - only available when running in service mode
+- enable child bridge by default when installing a plugin
+- change icon of plugin manage version feature
+- add a reset accessories feature to the plugin card
+  - only available when running a plugin in a child bridge and in service mode
+- add warning for older homebridge apt package users still running `pnpm`
+- split light/dark mode from themes, auto-change with browser changes
+- move login wallpaper from advanced settings to main settings
+- updates to `pl` language file (#2194, #2197) (@mkz212)
+- use new child bridge restart modal for after plugin config changes
+- open plugin config screen automatically after install plugin
+- open plugin logs screen automatically after update plugin
+  - this will only pop up when the plugin is running in a child bridge, and Homebridge does not need to be restarted
+  - if this turns out to be an unpopular addition then it can be reverted in a future release!
+- ui small tweaks to when buttons are loading/disabled
+- another attempt to fix tooltips appearing in front of modals
+- re-add 'lost' deep purple theme colour
+
+## Other Changes
+
+- upgrade `angular` from `v15` to `v16`
+- upgrade `angular` from `v16` to `v17`
+- upgrade `angular` from `v17` to `v18`
+- upgrade and re-patch `@zajsf/` dependencies
+- upgrade some ui dependencies
+  - upgraded `ng2-charts` and `ngx-md` to most recent major versions
+  - move from `ngx-monaco-editor` to `ngx-monaco-editor-v2`
+- add `css` linting to ui, fixed existing issues
+- add `html` linting to ui, fixed existing issues
+- upgrade `@ng-bootstrap/ng-bootstrap` and fix accordions
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.59.1 (2024-09-30)
+
+### UI Changes
+
+- fix some log settings are not visible in service mode (#2196) (@NorthernMan54)
+- fix restart not appearing on first plugin save
+- fix tooltips appearing over modals
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.59.0 (2024-09-27)
+
+### UI Changes
+
+- The following change only applies when running Homebridge 2.0-beta
+  - allow a `Debug Mode` setting per child bridge:
+    - this can be configured in the child bridge modal
+    - the general `Homebridge Debug Mode` now only applies to the main Homebridge bridge
+- increase width of notifications to `100%` on mobile devices
+- fix some styles on smaller screeners
+- hide settings section description on collapse
+- improve visibility of restart button in settings
+- allow translation for incorrect system date/time notification
+- consistent modal titles and remove unused lang strings
+- move lang, theme, temp units + port to main settings
+  - relabelled the UI settings screen as 'UI Advanced Settings'
+- offer to unpair child bridges when uninstalling plugins
+- offer to set up a child bridge immediately after configuring a new plugin
+- lang: clarify cached is removed when unpairing bridge
+- make input placeholder colour lighter in light mode
+- updates to `pl` language file (#2181, #2189) (@mkz212)
+- updates to `th` language file (#2182) (@tomzt)
+
+### Other Changes
+
+- consistent code lint across the server and ui components
+- use `vitest` for testing
+- no longer use `webpack`
+  - the final size of the `npm` package is actually higher with `webpack` than without
+- update dependencies, overrides, updated lint
+- `.toPromise()` is deprecated, change to `firstValueFrom()`
+- fix deprecated `.subscribe()` signature
+- HB2 plugins: also check for `>=2` from `engines.homebridge`
+- update dependencies - tackle dependabot alerts
+- move script files to own folder, improve error catching in `sh` scripts
+- use params for text replacements of backup size modal
+- variable naming consistency, reduce language string lengths
+- pack only necessary `monaco-editor` files
+  - this has reduced the unpacked size of the unpacked `npm` package from `~16.6MB` to `~11.0MB`
+- fix console errors in some settings modals, update `nestjs` dependencies
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.58.0 (2024-09-08)
+
+- ⚠️ The minimum version of Homebridge needed for the "child bridge extra configuration" functionality is `v1.8.0`. The UI will continue to work with Homebridge `v1.6.0` or later, however it is always recommended to run the latest version of Homebridge anyway.
+
+### UI Changes
+
+- added warning messages for backup files too large to be restored (@NorthernMan54)
+- hide node update available icon for synology users
+- various updates to widgets:
+  - hide the add widget button when the layout is locked
+  - only show the settings cog and draggable cursor on bigger screens and when layout is unlocked
+  - add config options for:
+    - CPU widget: added refresh interval and number of data points to show in the graph
+    - Homebridge widget: don't show plugins as up to date until the check has been completed
+    - Memory widget: added refresh interval and number of data points to show in the graph
+    - Network widget: added refresh interval and number of data points to show in the graph
+- updates to `zh-TW` language file (@tasict)
+- updates to `de` language file (@Staubgeborener)
+- updates to `th` language file (@tomzt)
+- updates to `sv` language file (@emilof)
+- updates to `pl` language file (@mkz212 + @grzegorz914)
+- updates to `uk` language file (@xrust83)
+- add `log.maxSize`/`log.truncateSize` options (#2161) (@tjenkinson)
+- fix missing translation string in setup wizard
+- various ui improvements and code consistency, including:
+  - new design for the 'manage version' plugin modal
+  - updated language strings in some of the settings modals
+  - renamed settings sections to be more descriptive (same functionality)
+    - `Remove Single Cached Accessory` → `Remove Single Accessory`
+    - `Remove All Cached Accessories` → `Remove All Accessories`
+    - `Unpair Bridges / Cameras / TVs / External Accessories` → `Unpair Single Bridge`
+    - `Reset Homebridge Accessory` → `Unpair All Bridges`
+  - restart Homebridge modal will now appear when closing the unpair single bridge modal (only if at least one bridge is unpaired)
+- offer more info about behaviour when disabling a plugin (on disable plugin modal)
+- change the 'power options' screen from a modal to a page
+- allow child bridge extra configuration in the child bridge modal (requires Homebridge 1.8.0 or above)
+- minor adjustments to settings page, add expands
+- improve plugin compatibility checker
+  - this will now compare your Homebridge and node versions against a version of a plugin you are going to install, rather than the version you currently have installed
+  - the check will be run when you are installing a plugin, updating a plugin and installing an alternate version of a plugin
+
+### UI Fixes
+
+- fix html parts in `ca`, `fr` + `sl` language files
+- update name of `mobile-web-app-capable` meta tag (from `apple-mobile-web-app-capable`)
+- support plugins with dots in their @scope (#2171) (@gtalusan)
+
+### Other Changes
+
+- remove unused language strings from i18n files
+- rename instances of `BatteryService` to `Battery`
+- update `@ngx-translate/core` and `angular-gridster2`
+- make use of `overrides` in the `package.json` files to patch dependency vulnerabilities
+- support node 22
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
+## v4.57.1 (2024-08-26)
+
+### UI Changes
+
+- hide and show config editor action buttons based on current action
+
+### UI Fixes
+
+- fix edge case of hiding child bridge setup (when plugin update is available)
+- fix pkg engines, take from installed version not npm
+
+### Other Changes
+
+- remove useless angular `OnInit`s
+- created shared global defaults pattern to allow sharing defaults between server and ui (@NorthernMan54)
+
+## v4.57.0 (2024-08-26)
+
+### UI Changes
+
+- show UI messages when node 22 updates available
+  - note that Homebridge, the UI, and plugins do not yet need to support Node.js 22
+  - update notifications for Node.js 22 will only be shown if you are **already** running Node.js 22
+- add a Homebridge v2.0 readiness badge to each installed plugin card with a modal explaining what it means
+  - a tick will show if you are running Homebridge v1 and the plugin has been marked as supported v2
+  - a cross will show if you are running Homebridge v1 and the plugin has not been marked as supported v2
+  - no icon will be shown if you are already running a Homebridge v2 beta version
+
+### Other Changes
+
+- EventEmitter memory leak warnings when you have a significant number of child bridges. (#2087) (@hjdhjd)
+- run improved linter on non-typescript files
+- remove unused `.prettierrc` file
+- updated dependencies
+- obtain verified plugin tarballs from `homebridge/verified` repo
+- ignore `.cache` folder when creating backup files (@paulk4633)
+- add `xterm-addon-web-links` to angular allowed cjs
+- fixes for angular build, fix for readiness icon
+
+### Homebridge Dependencies
+
+- `@homebridge/hap-client` @ `v1.10.2`
+- `@homebridge/node-pty-prebuilt-multiarch` @ `v0.11.14`
+- `@homebridge/plugin-ui-utils` @ `v1.0.3`
+
 ## v4.56.4 (2024-06-25)
 
 ### Other Changes
@@ -12,7 +507,7 @@ All notable changes to `homebridge-config-ui-x` will be documented in this file.
 
 ### Other Changes
 
-- Check that pkg.maintainers is defined before checking it's length (#2069) (@PatrickStankard)
+- Check that `pkg.maintainers` is defined before checking its length (#2069) (@PatrickStankard)
 
 ## v4.56.2 (2024-04-27)
 
@@ -87,7 +582,7 @@ All notable changes to `homebridge-config-ui-x` will be documented in this file.
 - improve GitHub actions
 - fixed Environment Info selection on bug and support templates
 - add wiki change request issue template
-- removed force of earlier version of `bonjour-service` as a fix has been implemented in latest version 
+- removed force of earlier version of `bonjour-service` as a fix has been implemented in latest version
 - updated release drafter template so releases do not start with a `v`
 - updated special plugin lists
 - check local dir for homebridge when running dev
@@ -229,7 +724,7 @@ _Also thanks to @mkz212 and @Staubgeborener for their contributions to the trans
 
 Happy Thanksgiving to our American friends! :turkey:
 
-⚠️ The minimum version of Homebridge needed for this version of UI is `v1.6.0`. If you are running a lower version of Homebridge, you should consider updating before installing this UI update.
+- ⚠️ The minimum version of Homebridge needed for this version of UI is `v1.6.0`. If you are running a lower version of Homebridge, you should consider updating before installing this UI update.
 
 ### UI Changes
 
